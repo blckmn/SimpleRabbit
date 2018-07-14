@@ -1,7 +1,7 @@
 language: csharp  
 sudo: required  
 dist: trusty  
-dotnet: dotnet-sdk-2.1
+dotnet: 2.1.0
 mono: none
 script:  
   - bash "${TRAVIS_BUILD_DIR}/build/build.sh"
