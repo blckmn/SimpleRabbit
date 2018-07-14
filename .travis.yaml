@@ -1,0 +1,10 @@
+language: csharp  
+sudo: required  
+dist: trusty  
+dotnet: dotnet-sdk-2.1
+mono: none
+branches:  
+  only:
+    - master
+script:  
+  - ./build/build.sh

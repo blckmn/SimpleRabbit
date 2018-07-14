@@ -31,3 +31,4 @@ _ReSharper*/
 packages/
 FolderProfile.pubxml
 *.csproj.DotSettings
+artifacts/
