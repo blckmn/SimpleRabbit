@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://github.com/blckmn/SimpleRabbit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/blckmn/SimpleRabbit</RepositoryUrl>
     <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">1.0.1-local</Version>
-    <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">1.0.$(BUILD_BUILDNUMBER)</Version>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">1.0.$(BUILD_BUILDNUMBER)-$(BUILD)</Version>
   </PropertyGroup>
 
   <ItemGroup>
