@@ -3,8 +3,12 @@ sudo: required
 dist: trusty  
 dotnet: dotnet-sdk-2.1
 mono: none
-branches:  
-  only:
-    - master
 script:  
-  - ./build/build.sh
+  - bash "${TRAVIS_BUILD_DIR}/build/build.sh"
+
+deploy:
+  provider: script
+  script: bash "${TRAVIS_BUILD_DIR}/build/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: master
