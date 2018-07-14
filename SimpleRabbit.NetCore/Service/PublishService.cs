@@ -10,32 +10,12 @@ namespace SimpleRabbit.NetCore
         void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null);
     }
 
-    public class PublishService : IPublishService, IDisposable
+    public class PublishService : BasicRabbitService, IPublishService
     {
-        private readonly ConnectionFactory _factory;
 
-        public PublishService(IOptions<RabbitConfiguration> options)
+        public PublishService(IOptions<RabbitConfiguration> options) : base(options)
         { 
-            var config = options.Value;
 
-            _factory = new ConnectionFactory
-            {
-                Uri = config.Uri,
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-                TopologyRecoveryEnabled = true
-            };
-        }
-
-        private IConnection _connection;
-        private IConnection Connection => _connection ?? (_connection = _factory.CreateConnection());
-
-        private IModel _channel;
-        private IModel Channel => _channel ?? (_channel = Connection.CreateModel());
-
-        public IBasicProperties GetBasicProperties()
-        {
-            return Channel.CreateBasicProperties();
         }
 
         public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null)
@@ -49,15 +29,6 @@ namespace SimpleRabbit.NetCore
                 route ?? "",
                 properties,
                 Encoding.UTF8.GetBytes(body ?? ""));
-        }
-
-        public void Dispose()
-        {
-            _channel?.Dispose();
-            _channel = null;
-
-            _connection?.Dispose();
-            _connection = null;
         }
     }
 

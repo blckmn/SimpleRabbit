@@ -9,62 +9,45 @@ namespace SimpleRabbit.NetCore
 {
     public interface IQueueService
     {
-	    void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1);
+        void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1);
         void Start(Subscriber subscriber, IMessageHandler handler);
-	    void Stop();
+        void Stop();
     }
 
-    public class QueueService : IQueueService, IDisposable
+    public class QueueService : BasicRabbitService, IQueueService
     {
         private readonly ILogger<QueueService> _logger;
-        private readonly ConnectionFactory _factory;
 
-	    private readonly Timer _timer;
-		public QueueService(IOptions<RabbitConfiguration> options, ILogger<QueueService> logger)
+        private readonly Timer _timer;
+        public QueueService(IOptions<RabbitConfiguration> options, ILogger<QueueService> logger) : base(options)
         {
             _logger = logger;
-            var config = options.Value;
 
-	        _timer = new Timer
-	        {
-		        AutoReset = false,
-	        };
-	        _timer.Elapsed += (sender, args) =>
-	        {
-		        Start();
-		        _timer.Stop();
-	        };
-
-			_factory = new ConnectionFactory
+            _timer = new Timer
             {
-                Uri = config.Uri,
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
-                RequestedHeartbeat = 5
+                AutoReset = false,
             };
-		}
+            _timer.Elapsed += (sender, args) =>
+            {
+                Start();
+                _timer.Stop();
+            };
+        }
 
         private const int MaxRetryInterval = 120;
         private void RestartIn(TimeSpan waitInterval)
-	    {
-	        _retryCount++;
-	        var interval = waitInterval.TotalSeconds * (_autoBackOff ? _retryCount : 1) % MaxRetryInterval;
+        {
+            _retryCount++;
+            var interval = waitInterval.TotalSeconds * (_autoBackOff ? _retryCount : 1) % MaxRetryInterval;
             
             _timer.Interval = interval * 1000;
             _logger.LogInformation($" -> restarting connection in {interval} seconds ({_retryCount}).");
-		    _timer.Start();
-		    Stop();
-	    }
+            _timer.Start();
+        }
 
-		private IConnection _connection;
-        private IConnection Connection => _connection ?? (_connection = _factory.CreateConnection());
-
-        private IModel _channel;
-        private IModel Channel => _channel ?? (_channel = Connection.CreateModel());
-
-	    private string _queue;
-	    private string _tag;
-	    private IMessageHandler _handler;
+        private string _queue;
+        private string _tag;
+        private IMessageHandler _handler;
         private ushort _prefetch;
         private int _retryInterval;
         private bool _autoBackOff;
@@ -72,17 +55,15 @@ namespace SimpleRabbit.NetCore
 
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
         {
-	        Stop();
             _prefetch = prefetch;
-	        _queue = queue;
-	        _tag = tag;
-	        _handler = handler;
-			Start();
+            _queue = queue;
+            _tag = tag;
+            _handler = handler;
+            Start();
         }
 
         public void Start(Subscriber subscriber, IMessageHandler handler)
         {
-            Stop();
             _prefetch = subscriber.PrefetchCount ?? 1;
             _queue = subscriber.QueueName;
             _tag = subscriber.ConsumerTag;
@@ -93,48 +74,51 @@ namespace SimpleRabbit.NetCore
         }
 
         private void Start()
-	    {
-	        try
-	        {
-	            var consumer = new EventingBasicConsumer(Channel);
-	            consumer.Received += (model, ea) =>
-	            {
-	                var channel = consumer.Model;
-	                try
-	                {
-	                    _handler?.Process(ea);
-	                    channel.BasicAck(ea.DeliveryTag, false);
-	                    _retryCount = 0;
-	                }
-                    catch (Exception ex)
-	                {
-	                    // error processing message
-	                    _logger.LogError(ex, $"{ex.Message} -> {ea.DeliveryTag}: {ea.BasicProperties.MessageId}");
-	                    RestartIn(TimeSpan.FromSeconds(_retryInterval));
-	                }
-	            };
-                Channel.BasicQos(0, _prefetch, false);
-	            Channel.BasicConsume(_queue, false, _tag, consumer);
-	        }
-	        catch (Exception e)
-	        {
-                _logger.LogError(e, e.Message);
-                RestartIn(TimeSpan.FromSeconds(_retryInterval));
-	        }
-	    }
-
-	    public void Stop()
-        {
-            _channel?.Dispose();
-            _channel = null;
-
-            _connection?.Dispose();
-            _connection = null;
-        }
-
-        public void Dispose()
         {
             Stop();
+            if (_handler == null)
+            {
+                throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_tag}");
+            }
+            try
+            {
+                var consumer = new EventingBasicConsumer(Channel);
+                consumer.Received += ReceiveEvent;
+                Channel.BasicQos(0, _prefetch, false);
+                Channel.BasicConsume(_queue, false, _tag, consumer);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, e.Message);
+                RestartIn(TimeSpan.FromSeconds(_retryInterval));
+            }
+        }
+
+        public void Stop()
+        {
+            ClearConnection();
+        }
+
+        private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
+        {
+            var channel = (sender as EventingBasicConsumer)?.Model;
+            if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
+
+            try
+            {
+                if (_handler?.Process(args) ?? false)
+                {
+                    channel.BasicAck(args.DeliveryTag, false);
+                }
+                _retryCount = 0;
+            }
+            catch (Exception ex)
+            {
+                // error processing message
+                _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
+                channel.BasicCancel(_tag);
+                RestartIn(TimeSpan.FromSeconds(_retryInterval));
+            }
         }
     }
 }
