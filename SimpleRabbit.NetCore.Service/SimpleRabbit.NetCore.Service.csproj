@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>BLCKMN</Authors>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/blckmn/SimpleRabbit/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/blckmn/SimpleRabbit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/blckmn/SimpleRabbit</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
