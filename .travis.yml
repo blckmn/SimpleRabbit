@@ -3,6 +3,11 @@ sudo: required
 dist: trusty  
 dotnet: 2.1
 mono: none
+
+branches:
+  only:
+  - master
+
 script:  
   - bash "${TRAVIS_BUILD_DIR}/build/build.sh"
 
