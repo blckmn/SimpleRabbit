@@ -5,7 +5,11 @@ set -e
 basepath="$PWD"
 artifacts="$basepath/artifacts"
 nuget_server="https://www.nuget.org/api/v2/package"
-revision=$(printf "rel-%d" ${TRAVIS_JOB_ID:=1}) 
+#revision=$(printf "rel-%d" ${TRAVIS_BUILD_NUMBER:=1}) 
+revision="rel" 
+
+buildnumber=${TRAVIS_BUILD_NUMBER:=1}
+export BUILD_BUILDNUMBER=${buildnumber}
 
 if [ -d $artifacts ]; then  
   rm -R $artifacts
