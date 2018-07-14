@@ -14,9 +14,9 @@ namespace SimpleRabbit.NetCore.Service
     {
         private readonly ILogger<SubscriberService> _logger;
         private readonly IServiceProvider _provider;
-        private readonly IList<Subscriber> _subscribers;
+        private readonly IList<SubscriberConfiguration> _subscribers;
 
-        public SubscriberService(ILogger<SubscriberService> logger, IOptions<List<Subscriber>> options, IServiceProvider provider)
+        public SubscriberService(ILogger<SubscriberService> logger, IOptions<List<SubscriberConfiguration>> options, IServiceProvider provider)
         {
             _logger = logger;
             _provider = provider;

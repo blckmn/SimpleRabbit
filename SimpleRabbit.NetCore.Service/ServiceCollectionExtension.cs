@@ -16,7 +16,7 @@ namespace SimpleRabbit.NetCore.Service
         {
             services.AddRabbitServices(config);
 
-            services.Configure<List<Subscriber>>(config.GetSection("Subscribers"));
+            services.Configure<List<SubscriberConfiguration>>(config.GetSection("Subscribers"));
             services.AddSingleton<IHostedService, SubscriberService>();
             services.AddTransient<IQueueService, QueueService>();
         }
