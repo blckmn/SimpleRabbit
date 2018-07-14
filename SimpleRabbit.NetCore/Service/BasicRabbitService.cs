@@ -51,5 +51,4 @@ namespace SimpleRabbit.NetCore
             ClearConnection();
         }
     }
-
 }

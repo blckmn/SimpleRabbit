@@ -7,8 +7,8 @@ namespace SimpleRabbit.NetCore
     {
         private static void AddRabbitServices(this IServiceCollection services, IConfiguration config)
         {
-	        services.Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"));
-	    }
+            services.Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"));
+        }
 
         public static void AddPublisherServices(this IServiceCollection services, IConfiguration config)
         {

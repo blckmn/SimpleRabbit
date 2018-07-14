@@ -1,6 +1,6 @@
 ﻿namespace SimpleRabbit.NetCore
 {
-    public class Subscriber
+    public class SubscriberConfiguration
     {
         public string ExchangeName { get; set; }
         public string ConsumerTag { get; set; }

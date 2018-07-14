@@ -10,7 +10,7 @@ namespace SimpleRabbit.NetCore
     public interface IQueueService
     {
         void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1);
-        void Start(Subscriber subscriber, IMessageHandler handler);
+        void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler);
         void Stop();
     }
 
@@ -62,13 +62,13 @@ namespace SimpleRabbit.NetCore
             Start();
         }
 
-        public void Start(Subscriber subscriber, IMessageHandler handler)
+        public void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler)
         {
-            _prefetch = subscriber.PrefetchCount ?? 1;
-            _queue = subscriber.QueueName;
-            _tag = subscriber.ConsumerTag;
-            _retryInterval = subscriber.RetryInterval;
-            _autoBackOff = subscriber.AutoBackOff;
+            _prefetch = subscriberConfiguration.PrefetchCount ?? 1;
+            _queue = subscriberConfiguration.QueueName;
+            _tag = subscriberConfiguration.ConsumerTag;
+            _retryInterval = subscriberConfiguration.RetryInterval;
+            _autoBackOff = subscriberConfiguration.AutoBackOff;
             _handler = handler;
             Start();
         }
