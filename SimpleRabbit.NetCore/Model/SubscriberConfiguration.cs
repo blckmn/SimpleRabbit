@@ -1,4 +1,4 @@
-﻿namespace SimpleRabbit.NetCore
+﻿namespace SimpleRabbit.NetCore.Model
 {
     public class SubscriberConfiguration
     {

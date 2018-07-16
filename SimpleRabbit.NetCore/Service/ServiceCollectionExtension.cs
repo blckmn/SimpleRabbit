@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleRabbit.NetCore.Model;
 
-namespace SimpleRabbit.NetCore
+namespace SimpleRabbit.NetCore.Service
 {
     public static class ServiceCollectionExtension
     {

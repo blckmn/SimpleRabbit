@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SimpleRabbit.NetCore
+namespace SimpleRabbit.NetCore.Model
 {
     public class RabbitConfiguration
     {
