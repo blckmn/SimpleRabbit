@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client.Events;
 
-namespace SimpleRabbit.NetCore.Service
+namespace SimpleRabbit.NetCore
 {
     public interface IMessageHandler
     {

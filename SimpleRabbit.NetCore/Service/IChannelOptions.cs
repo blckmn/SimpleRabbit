@@ -1,7 +1,7 @@
 ﻿using System;
 using RabbitMQ.Client;
 
-namespace SimpleRabbit.NetCore.Service
+namespace SimpleRabbit.NetCore
 {
     public interface IChannelOptions
     {

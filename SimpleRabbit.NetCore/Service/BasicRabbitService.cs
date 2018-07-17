@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using SimpleRabbit.NetCore.Model;
 
-namespace SimpleRabbit.NetCore.Service
+namespace SimpleRabbit.NetCore
 {
     public abstract class BasicRabbitService : IDisposable
     {

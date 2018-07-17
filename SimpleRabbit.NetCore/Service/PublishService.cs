@@ -2,9 +2,8 @@
 using System.Text;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using SimpleRabbit.NetCore.Model;
 
-namespace SimpleRabbit.NetCore.Service
+namespace SimpleRabbit.NetCore
 {
     public interface IPublishService
     {
