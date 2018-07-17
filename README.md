@@ -64,20 +64,20 @@ The message handler is chosen based on the CanProcess call. The consumer tag is 
 ```
     internal class Processor : IMessageHandler
     {
-	    public bool CanProcess(string tag)
-	    {
+        public bool CanProcess(string tag)
+        {
             /* validate whether this handler will handle this tag */
-		    return true;
-	    }
+            return true;
+        }
 
-	    public bool Process(BasicDeliverEventArgs args)
-	    {
-	        var body = Encoding.UTF8.GetString(args.Body);
+        public bool Process(BasicDeliverEventArgs args)
+        {
+            var body = Encoding.UTF8.GetString(args.Body);
 
-	        if (string.IsNullOrWhiteSpace(body))
-	        {
-	            Console.WriteLine($"Message contents: {body}");
-	        }
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                Console.WriteLine($"Message contents: {body}");
+            }
             else 
             {
                 Console.WriteLine($"Empty message: {args.BasicProperties?.MessageId}")
