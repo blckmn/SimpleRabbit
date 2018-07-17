@@ -90,15 +90,17 @@ The message handler is chosen based on the CanProcess call. The consumer tag is 
 
 Subscribers are a list (of queues to consume), and they are auto wired up to the queue and are eventing based. The message handler for a given queue is chosen based on matching consumer tags.
 ```
-    "RabbitConfiguration": {
-        "Uri": "amqp://username:password@hostname/"
-    },
-    "Subscribers": [
-        {
-            "ConsumerTag": "TestTagName",
-            "QueueName": "Test"
-        }
-    ],
+    {
+        "RabbitConfiguration": {
+            "Uri": "amqp://username:password@hostname/"
+        },
+        "Subscribers": [
+            {
+                "ConsumerTag": "TestTagName",
+                "QueueName": "Test"
+            }
+        ]
+    }
 ```
 
 ### Extra configuration
