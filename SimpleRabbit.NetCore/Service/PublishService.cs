@@ -7,6 +7,7 @@ namespace SimpleRabbit.NetCore
 {
     public interface IPublishService
     {
+        void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "");
         void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null);
     }
 
@@ -16,6 +17,11 @@ namespace SimpleRabbit.NetCore
         public PublishService(IOptions<RabbitConfiguration> options) : base(options)
         { 
 
+        }
+
+        public void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "")
+        {
+            Publish(exchange, route, properties, body);
         }
 
         public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null)
