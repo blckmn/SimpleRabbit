@@ -100,7 +100,7 @@ namespace SimpleRabbit.NetCore
 
         public void Stop()
         {
-            CloseConnection();
+            Close();
         }
 
         private void ReceiveEvent(object sender, BasicDeliverEventArgs args)

@@ -37,7 +37,7 @@ namespace SimpleRabbit.NetCore
             return Channel.CreateBasicProperties();
         }
 
-        protected void CloseConnection()
+        public void Close()
         {
             try 
             {
@@ -59,7 +59,7 @@ namespace SimpleRabbit.NetCore
 
         protected virtual void Dispose(bool disposing)
         {
-            CloseConnection();
+            Close();
         }
 
         ~BasicRabbitService()
