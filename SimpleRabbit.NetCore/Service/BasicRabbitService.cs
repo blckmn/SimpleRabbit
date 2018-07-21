@@ -37,18 +37,34 @@ namespace SimpleRabbit.NetCore
             return Channel.CreateBasicProperties();
         }
 
-        protected void ClearConnection()
+        public void Close()
         {
-            _channel?.Dispose();
-            _channel = null;
-
-            _connection?.Dispose();
-            _connection = null;
+            try 
+            {
+                _channel.Dispose();
+                _channel = null;
+            }
+            finally 
+            {
+                _connection?.Dispose();
+                _connection = null;
+            }
         }
 
         public void Dispose()
         {
-            ClearConnection();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            Close();
+        }
+
+        ~BasicRabbitService()
+        {
+            Dispose(false);
         }
     }
 }
