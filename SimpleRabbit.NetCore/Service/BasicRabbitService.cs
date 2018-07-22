@@ -5,7 +5,13 @@ using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
 {
-    public abstract class BasicRabbitService : IDisposable
+    public interface IBasicRabbitService : IDisposable
+    {
+        IBasicProperties GetBasicProperties();
+        void Close();
+    }
+
+    public abstract class BasicRabbitService : IBasicRabbitService
     {
         private readonly ConnectionFactory _factory;
         private readonly IList<string> _hostnames;
