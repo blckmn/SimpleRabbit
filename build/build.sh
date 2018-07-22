@@ -28,10 +28,6 @@ echo "Revision:  ${revision}"
 echo "Build #:   ${buildnumber}"
 echo "Version:   ${version}"
 
-if [[ ! -e ${artifacts} ]]; then
-    mkdir ${artifacts}
-fi
-
 dotnet nuget locals all --clear
 
 dotnet restore
