@@ -6,11 +6,10 @@ using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
 {
-    public interface IPublishService : IDisposable
+    public interface IPublishService : IBasicRabbitService
     {
         void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "");
         void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null);
-        void Close();
     }
 
     public class PublishService : BasicRabbitService, IPublishService
