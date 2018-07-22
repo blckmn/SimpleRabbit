@@ -67,6 +67,8 @@ namespace SimpleRabbit.NetCore
         public void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler)
         {
             _queueServiceParams = subscriberConfiguration;
+            _handler = handler;
+
             Start();
         }
 
