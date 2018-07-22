@@ -47,7 +47,7 @@ namespace SimpleRabbit.NetCore
         {
             try 
             {
-                _channel.Dispose();
+                _channel?.Dispose();
                 _channel = null;
             }
             finally 
