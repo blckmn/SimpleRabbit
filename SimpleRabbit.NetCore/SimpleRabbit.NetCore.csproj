@@ -7,8 +7,6 @@
     <PackageLicenseUrl>https://raw.githubusercontent.com/blckmn/SimpleRabbit/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/blckmn/SimpleRabbit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/blckmn/SimpleRabbit</RepositoryUrl>
-    <Version Condition=" '$(VERSION)' == '' ">1.0.1-local</Version>
-    <Version Condition=" '$(VERSION)' != '' ">$(VERSION)</Version>
 
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
     <Copyright>Copyright © BLCKMN 2018</Copyright>
