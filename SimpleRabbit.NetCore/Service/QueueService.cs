@@ -7,7 +7,7 @@ using RabbitMQ.Client.Events;
 
 namespace SimpleRabbit.NetCore
 {
-    public interface IQueueService
+    public interface IQueueService : IBasicRabbitService
     {
         void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1);
         void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler);
