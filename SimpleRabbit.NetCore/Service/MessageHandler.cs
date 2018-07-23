@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -28,6 +29,9 @@ namespace SimpleRabbit.NetCore
 
         public string Body => Encoding.UTF8.GetString(DeliveryArgs?.Body);
         public IBasicProperties Properties => DeliveryArgs?.BasicProperties;
-        public ulong DeliveryTag => DeliveryArgs.DeliveryTag;
+        public ulong DeliveryTag => DeliveryArgs?.DeliveryTag ?? 0;
+        public string ConsumerTag => DeliveryArgs?.ConsumerTag;
+        public string MessageId => Properties?.MessageId;
+        public IDictionary<string, object> Headers => Properties?.Headers;
     }
 }
