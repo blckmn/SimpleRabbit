@@ -2,19 +2,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace SimpleRabbit.NetCore.Dispatcher
 {
-    public abstract class AbstractDispatchingMessageHandler<T> : IMessageHandler, IChannelOptions
+    public abstract class AbstractDispatchingMessageHandler<T> : IMessageHandler
     {
         private readonly ILogger<AbstractDispatchingMessageHandler<T>> _logger;
         private readonly Dictionary<string, List<ModelDetails<T>>> _queues = new Dictionary<string, List<ModelDetails<T>>>();
         private readonly object _semaphore = new object();
-
-        private IModel _model;
-        private Action _onError;
 
         protected AbstractDispatchingMessageHandler(ILogger<AbstractDispatchingMessageHandler<T>> logger)
         {
@@ -22,14 +17,14 @@ namespace SimpleRabbit.NetCore.Dispatcher
         }
 
         public abstract bool CanProcess(string tag);
-        protected abstract void ProcessMessage(T msg);
-        public abstract T Get(BasicDeliverEventArgs args);
-        public abstract string GetKey(T msg);
+        protected abstract void ProcessMessage(T message);
+        public abstract T GetItem(BasicMessage message);
+        public abstract string GetKey(T message);
 
-        public bool Process(BasicDeliverEventArgs args)
+        public bool Process(BasicMessage message)
         {
-            var msg = Get(args);
-            var key = GetKey(msg);
+            var item = GetItem(message);
+            var key = GetKey(item);
             lock (_semaphore)
             {
                 if (!_queues.TryGetValue(key, out var queue))
@@ -41,15 +36,15 @@ namespace SimpleRabbit.NetCore.Dispatcher
                 }
                 queue.Add(new ModelDetails<T>
                 {
-                    Args = args,
-                    Message = msg
+                    Message = message,
+                    Item = item
                 });
             }
 
             return false;
         }
 
-        private void ProcessQueue(List<ModelDetails<T>> queue, string key)
+        private void ProcessQueue(IList<ModelDetails<T>> queue, string key)
         {
             try
             {
@@ -66,15 +61,22 @@ namespace SimpleRabbit.NetCore.Dispatcher
 
                         details = queue[0];
                     }
-
-                    ProcessMessage(details.Message);
+                    try
+                    {
+                        ProcessMessage(details.Item);
+                    }
+                    catch
+                    {
+                        details?.Message?.RegisterError?.Invoke();
+                        throw;
+                    }
 
                     lock (_semaphore)
                     {
                         queue.Remove(details);
                     }
 
-                    _model?.BasicAck(details.Args.DeliveryTag, false);
+                    details.Message.Channel?.BasicAck(details.Message.DeliveryTag, false);
                 }
             }
             catch (Exception e)
@@ -82,14 +84,7 @@ namespace SimpleRabbit.NetCore.Dispatcher
                 _logger.LogError(e, "An error occured while processing a message queue");
                 queue.Clear();
                 _queues.Remove(key);
-                _onError?.Invoke();
             }
-        }
-
-        public void SetChannelOptions(IModel model, Action onError)
-        {
-            _model = model;
-            _onError = onError;
         }
     }
 }
