@@ -43,6 +43,15 @@ namespace SimpleRabbit.NetCore
 
         private void RestartIn(TimeSpan waitInterval)
         {
+            try
+            {
+                // attempt to stop the event consumption.
+                Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
+            }
+            catch
+            {
+                // ignored
+            }
             _retryCount++;
             var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
 
@@ -79,16 +88,11 @@ namespace SimpleRabbit.NetCore
             {
                 throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_queueServiceParams.ConsumerTag}");
             }
+
             try
             {
                 var consumer = new EventingBasicConsumer(Channel);
                 consumer.Received += ReceiveEvent;
-
-                if (_handler is IChannelOptions options)
-                {
-                    options.SetChannelOptions(Channel,
-                        () => RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval)));
-                }
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
                 Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.ConsumerTag, consumer);
@@ -112,7 +116,8 @@ namespace SimpleRabbit.NetCore
 
             try
             {
-                if (_handler?.Process(args) ?? false)
+                if (_handler.Process(new BasicMessage(args, channel, _queueServiceParams.QueueName,
+                    () => RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval)))))
                 {
                     channel.BasicAck(args.DeliveryTag, false);
                 }
@@ -122,7 +127,6 @@ namespace SimpleRabbit.NetCore
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-                channel.BasicCancel(_queueServiceParams.ConsumerTag);
                 RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
             }
         }
