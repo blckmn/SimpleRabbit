@@ -80,7 +80,7 @@ The message handler is chosen based on the CanProcess call. The consumer tag is 
             }
             else 
             {
-                Console.WriteLine($"Empty message: {message.BasicProperties?.MessageId}")
+                Console.WriteLine($"Empty message: {message.MessageId}")
             }
             /* returning false, and the message will be Nack'd and requeued */
             return true;
