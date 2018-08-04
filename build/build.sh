@@ -34,8 +34,9 @@ dotnet restore
 
 dotnet build -c Release
 
-dotnet pack -c Release -o ${artifacts} /p:PackageVersion=${version} --no-dependencies
 
-if [ "${revision}" == "release" ]; then
-  dotnet nuget push "${artifacts}/*.nupkg" -s ${nuget_server} -k ${NUGET_ACCESS_KEY}
+if [ "${1}" == "deploy" ]; then
+  dotnet pack -c Release -o ${artifacts} /p:PackageVersion=${version} --no-dependencies
+
+  dotnet nuget push "${artifacts}/SimpleRabbit*.nupkg" -s ${nuget_server} -k ${NUGET_ACCESS_KEY}
 fi
