@@ -10,3 +10,10 @@ branches:
 
 script:  
   - bash "${TRAVIS_BUILD_DIR}/build/build.sh"
+
+deploy:
+  provider: script
+  script: bash "${TRAVIS_BUILD_DIR}/build/build.sh" deploy
+  skip_cleanup: true
+  on:
+    branch: release
