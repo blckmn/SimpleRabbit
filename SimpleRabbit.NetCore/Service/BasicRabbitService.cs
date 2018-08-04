@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -13,8 +14,38 @@ namespace SimpleRabbit.NetCore
 
     public abstract class BasicRabbitService : IBasicRabbitService
     {
+        private const int Infinite = -1;
+        private const int TimerPeriod = 10000;
+
         private readonly ConnectionFactory _factory;
         private readonly IList<string> _hostnames;
+        /*
+         Timer is a small hack that if someone publishes, the connection is not held open indefinitely.
+         This is due to the threading in the Connection that prevents Console appications from stopping if
+         connection is not closed (i.e. inside a using clause or not calling close). 
+        */
+        private readonly Timer _timer;
+        protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
+        protected abstract void OnWatchdogExecution();
+
+        protected void WatchdogExecution()
+        {
+            var acquired = false;
+            try
+            {
+                Monitor.TryEnter(this, ref acquired);
+                if (!acquired)
+                {
+                    return;
+                }
+
+                OnWatchdogExecution();
+            }
+            finally
+            {
+                if (acquired) Monitor.Exit(this);
+            }
+        }
 
         protected BasicRabbitService(IOptions<RabbitConfiguration> options)
         {
@@ -30,6 +61,12 @@ namespace SimpleRabbit.NetCore
                 TopologyRecoveryEnabled = true,
                 RequestedHeartbeat = 5
             };
+
+            _timer = new Timer(state =>
+                {
+                    WatchdogExecution();
+                }, this, Infinite, TimerPeriod
+            );
         }
 
         private IConnection _connection;
@@ -66,6 +103,7 @@ namespace SimpleRabbit.NetCore
         protected virtual void Dispose(bool disposing)
         {
             Close();
+            _timer.Change(Infinite, Infinite);
         }
 
         ~BasicRabbitService()
