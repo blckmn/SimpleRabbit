@@ -36,8 +36,8 @@ namespace SimpleRabbit.NetCore
             };
             _timer.Elapsed += (sender, args) =>
             {
-                Start();
                 _timer.Stop();
+                Start();
             };
         }
 
@@ -66,7 +66,8 @@ namespace SimpleRabbit.NetCore
             {
                 PrefetchCount = prefetch,
                 QueueName = queue,
-                ConsumerTag = tag
+                ConsumerTag = tag,
+                RetryInterval = 30
             };
             _handler = handler;
 
@@ -76,6 +77,10 @@ namespace SimpleRabbit.NetCore
         public void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler)
         {
             _queueServiceParams = subscriberConfiguration;
+            if (_queueServiceParams.RetryInterval == 0)
+            {
+                _queueServiceParams.RetryInterval = 30;
+            }
             _handler = handler;
 
             Start();
