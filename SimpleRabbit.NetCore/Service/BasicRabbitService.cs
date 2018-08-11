@@ -105,7 +105,8 @@ namespace SimpleRabbit.NetCore
         protected virtual void Dispose(bool disposing)
         {
             Close();
-            _timer.Change(Infinite, Infinite);
+            _timer?.Change(Infinite, Infinite);
+            _timer?.Dispose();
         }
 
         ~BasicRabbitService()
