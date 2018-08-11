@@ -14,7 +14,6 @@ An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore proj
             .Build();
 
         var services = new ServiceCollection();
-        services.AddSingleton<PublisherProcess>();
         services.AddPublisherServices(configuration);
 
         var provider = services.BuildServiceProvider();
@@ -52,8 +51,9 @@ The appsettings.json file (to provide connectivity to rabbit):
                 services.AddOptions();
 
                 /* the rabbit services */
-                services.AddSubscriberServices(context.Configuration);
-                services.AddSingleton<IMessageHandler, Processor>();
+                services
+                    .AddSubscriberServices(context.Configuration)
+                    .AddSingleton<IMessageHandler, Processor>();
             });
 
         await builder.RunConsoleAsync();
