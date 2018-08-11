@@ -5,15 +5,11 @@ namespace SimpleRabbit.NetCore
 {
     public static class ServiceCollectionExtension
     {
-        private static void AddRabbitServices(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection AddPublisherServices(this IServiceCollection services, IConfiguration config)
         {
-            services.Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"));
-        }
-
-        public static void AddPublisherServices(this IServiceCollection services, IConfiguration config)
-        {
-            services.AddRabbitServices(config);
-            services.AddTransient<IPublishService, PublishService>();
+            return services
+                .Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"))
+                .AddTransient<IPublishService, PublishService>();
         }
     }
 }

@@ -82,8 +82,10 @@ namespace SimpleRabbit.NetCore
 
         public void Close()
         {
-            try 
+            try
             {
+                _timer.Change(Infinite, Infinite);
+
                 _channel?.Dispose();
                 _channel = null;
             }
