@@ -82,8 +82,10 @@ namespace SimpleRabbit.NetCore
 
         public void Close()
         {
-            try 
+            try
             {
+                _timer.Change(Infinite, Infinite);
+
                 _channel?.Dispose();
                 _channel = null;
             }
@@ -103,7 +105,8 @@ namespace SimpleRabbit.NetCore
         protected virtual void Dispose(bool disposing)
         {
             Close();
-            _timer.Change(Infinite, Infinite);
+            _timer?.Change(Infinite, Infinite);
+            _timer?.Dispose();
         }
 
         ~BasicRabbitService()

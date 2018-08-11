@@ -7,18 +7,13 @@ namespace SimpleRabbit.NetCore.Service
 {
     public static class ServiceCollectionExtension
     {
-        private static void AddRabbitServices(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection AddSubscriberServices(this IServiceCollection services, IConfiguration config)
         {
-            services.Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"));
-        }
-
-        public static void AddSubscriberServices(this IServiceCollection services, IConfiguration config)
-        {
-            services.AddRabbitServices(config);
-
-            services.Configure<List<SubscriberConfiguration>>(config.GetSection("Subscribers"));
-            services.AddSingleton<IHostedService, SubscriberService>();
-            services.AddTransient<IQueueService, QueueService>();
+            return services
+                .Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"))
+                .Configure<List<SubscriberConfiguration>>(config.GetSection("Subscribers"))
+                .AddSingleton<IHostedService, SubscriberService>()
+                .AddTransient<IQueueService, QueueService>();
         }
     }
 }
