@@ -91,7 +91,7 @@ namespace SimpleRabbit.NetCore
             Stop();
             if (_handler == null)
             {
-                throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_queueServiceParams.ConsumerTag}");
+                throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_queueServiceParams.ConsumerTag} => {_queueServiceParams.QueueName}");
             }
 
             try
@@ -104,7 +104,7 @@ namespace SimpleRabbit.NetCore
             }
             catch (Exception e)
             {
-                _logger.LogError(e, e.Message);
+                _logger.LogError(e, $"{_queueServiceParams.QueueName} -> {e.Message}");
                 RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
             }
         }
