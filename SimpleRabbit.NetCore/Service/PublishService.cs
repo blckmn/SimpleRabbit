@@ -34,7 +34,7 @@ namespace SimpleRabbit.NetCore
 
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
             
-            lock (Channel)
+            lock (this)
             {
                 Channel.BasicPublish(exchange ?? "",
                     route ?? "",

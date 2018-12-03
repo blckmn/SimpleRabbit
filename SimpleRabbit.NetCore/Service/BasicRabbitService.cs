@@ -77,22 +77,28 @@ namespace SimpleRabbit.NetCore
 
         public IBasicProperties GetBasicProperties()
         {
-            return Channel.CreateBasicProperties();
+            lock(this)
+            {
+                return Channel.CreateBasicProperties();
+            }
         }
 
         public void Close()
         {
-            try
-            {
-                _timer.Change(Infinite, Infinite);
+            lock(this)
+            { 
+                try
+                {
+                    _timer.Change(Infinite, Infinite);
 
-                _channel?.Dispose();
-                _channel = null;
-            }
-            finally 
-            {
-                _connection?.Dispose();
-                _connection = null;
+                    _channel?.Dispose();
+                    _channel = null;
+                }
+                finally 
+                {
+                    _connection?.Dispose();
+                    _connection = null;
+                }
             }
         }
 
