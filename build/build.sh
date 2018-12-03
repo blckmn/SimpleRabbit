@@ -34,7 +34,6 @@ dotnet restore
 
 dotnet build -c Release
 
-
 if [ "${1}" == "deploy" ]; then
   dotnet pack -c Release -o ${artifacts} /p:PackageVersion=${version} --no-dependencies
 
