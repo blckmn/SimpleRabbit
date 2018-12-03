@@ -34,6 +34,7 @@ namespace SimpleRabbit.NetCore
             {
                 AutoReset = false,
             };
+
             _timer.Elapsed += (sender, args) =>
             {
                 _timer.Stop();
@@ -52,6 +53,7 @@ namespace SimpleRabbit.NetCore
             {
                 // ignored
             }
+            
             _retryCount++;
             var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
 
