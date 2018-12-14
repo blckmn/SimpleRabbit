@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace SimpleRabbit.NetCore.Dispatcher
 {
     public class MessageDispatcher
     {
-        private readonly ILogger<MessageDispatcher> _logger;
         private readonly Dictionary<string, List<BasicMessage>> _queues = new Dictionary<string, List<BasicMessage>>();
-
-        public MessageDispatcher(ILogger<MessageDispatcher> logger)
-        {
-            _logger = logger;
-        }
 
         public void Init(Func<BasicMessage, bool> onProcess, Action<BasicMessage> onError = null)
         {
@@ -80,14 +73,15 @@ namespace SimpleRabbit.NetCore.Dispatcher
                             }
                         }
                     }
-                    catch (Exception e)
+                    catch
                     {
-                        _logger.LogError(e, "An error occured while processing a message queue");
                         queue.Clear();
                         lock (_queues)
                         {
                             _queues.Remove(key);
                         }
+
+                        throw;
                     }
                 });
             }
