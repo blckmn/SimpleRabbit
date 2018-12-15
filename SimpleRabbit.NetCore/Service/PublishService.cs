@@ -34,10 +34,13 @@ namespace SimpleRabbit.NetCore
 
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
             
-            Channel.BasicPublish(exchange ?? "",
-                route ?? "",
-                properties,
-                Encoding.UTF8.GetBytes(body ?? ""));
+            lock (this)
+            {
+                Channel.BasicPublish(exchange ?? "",
+                    route ?? "",
+                    properties,
+                    Encoding.UTF8.GetBytes(body ?? ""));
+            }
         }
 
         protected override void OnWatchdogExecution()
