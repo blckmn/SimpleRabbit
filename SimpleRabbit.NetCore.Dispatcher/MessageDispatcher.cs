@@ -3,10 +3,28 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore.Dispatcher
-{
-    public class MessageDispatcher
+{ 
+    public interface IMessageDispatcher
     {
-        private readonly Dictionary<string, List<BasicMessage>> _queues = new Dictionary<string, List<BasicMessage>>();
+        void Enqueue(string key, BasicMessage message);
+        void Init(Func<BasicMessage, bool> onProcess, Action<BasicMessage> onError = null);
+    }
+
+    internal class KeyedQueue 
+    {
+        public KeyedQueue(string key) 
+        {
+            Key = key;
+        }
+        
+        public string Key { get; private set; }
+        public Task Task { get; set; }
+        public readonly List<BasicMessage> Messages = new List<BasicMessage>();
+    }
+
+    public class MessageDispatcher : IMessageDispatcher
+    {
+        private readonly Dictionary<string, KeyedQueue> _queues = new Dictionary<string, KeyedQueue>();
 
         public void Init(Func<BasicMessage, bool> onProcess, Action<BasicMessage> onError = null)
         {
@@ -20,23 +38,23 @@ namespace SimpleRabbit.NetCore.Dispatcher
         public void Enqueue(string key, BasicMessage message)
         {
             var startTask = false;
-            List<BasicMessage> queue;
+            KeyedQueue queue;
             lock (_queues)
             {
                 if (!_queues.TryGetValue(key, out queue))
                 {
-                    queue = new List<BasicMessage>();
+                    queue = new KeyedQueue(key);
                     _queues.Add(key, queue);
 
                     startTask = true;
                 }
 
-                queue.Add(message);
+                queue.Messages.Add(message);
             }
 
             if (startTask)
             {
-                Task.Run(() =>
+                queue.Task = Task.Run(() =>
                 {
                     try
                     {
@@ -45,13 +63,13 @@ namespace SimpleRabbit.NetCore.Dispatcher
                             BasicMessage queuedMessage;
                             lock (_queues)
                             {
-                                if (queue.Count == 0)
+                                if (queue.Messages.Count == 0)
                                 {
                                     _queues.Remove(key);
                                     return;
                                 }
 
-                                queuedMessage = queue[0];
+                                queuedMessage = queue.Messages[0];
                             }
 
                             try
@@ -69,13 +87,14 @@ namespace SimpleRabbit.NetCore.Dispatcher
 
                             lock (_queues)
                             {
-                                queue.Remove(queuedMessage);
+                                queue.Messages.Remove(queuedMessage);
                             }
                         }
                     }
                     catch
                     {
-                        queue.Clear();
+                        /* serious problem if we land here */
+                        queue.Messages.Clear();
                         lock (_queues)
                         {
                             _queues.Remove(key);
