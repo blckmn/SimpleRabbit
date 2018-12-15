@@ -7,7 +7,7 @@ namespace SimpleRabbit.NetCore.Dispatcher
     public interface IMessageDispatcher
     {
         void Enqueue(string key, BasicMessage message);
-        void Init(Func<BasicMessage, bool> onProcess, Action<BasicMessage> onError = null);
+        void Init(Func<BasicMessage, bool> onProcess, Action<Exception, BasicMessage> onError = null);
     }
 
     internal class KeyedQueue 
@@ -17,7 +17,7 @@ namespace SimpleRabbit.NetCore.Dispatcher
             Key = key;
         }
         
-        public string Key { get; private set; }
+        public string Key { get; }
         public Task Task { get; set; }
         public readonly List<BasicMessage> Messages = new List<BasicMessage>();
     }
@@ -26,13 +26,13 @@ namespace SimpleRabbit.NetCore.Dispatcher
     {
         private readonly Dictionary<string, KeyedQueue> _queues = new Dictionary<string, KeyedQueue>();
 
-        public void Init(Func<BasicMessage, bool> onProcess, Action<BasicMessage> onError = null)
+        public void Init(Func<BasicMessage, bool> onProcess, Action<Exception, BasicMessage> onError = null)
         {
             OnProcess = onProcess;
             OnError = onError;
         }
 
-        public Action<BasicMessage> OnError { get; set; }
+        public Action<Exception, BasicMessage> OnError { get; set; }
         public Func<BasicMessage, bool> OnProcess { get; set; }
 
         public void Enqueue(string key, BasicMessage message)
@@ -79,9 +79,9 @@ namespace SimpleRabbit.NetCore.Dispatcher
                                     queuedMessage.Channel?.BasicAck(queuedMessage.DeliveryTag, false);
                                 }
                             }
-                            catch
+                            catch (Exception e)
                             {
-                                OnError?.Invoke(queuedMessage);
+                                OnError?.Invoke(e, queuedMessage);
                                 queuedMessage?.RegisterError?.Invoke();
                             }
 
