@@ -36,10 +36,12 @@ namespace SimpleRabbit.NetCore
             
             lock (this)
             {
+                Channel.ConfirmSelect();
                 Channel.BasicPublish(exchange ?? "",
                     route ?? "",
                     properties,
                     Encoding.UTF8.GetBytes(body ?? ""));
+                Channel.WaitForConfirmsOrDie();
             }
         }
 
