@@ -7,9 +7,7 @@ namespace Subscriber.Service.Service
     {
         public bool CanProcess(string tag)
         {
-            if (tag == null) return false;
-
-            return tag.ToUpper().EndsWith("DISPATCHER");
+            return tag?.ToUpper().EndsWith("DISPATCH") ?? false;
         }
 
         public bool Process(BasicMessage message)

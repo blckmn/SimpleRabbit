@@ -18,13 +18,16 @@
       <PackageReference Include="microsoft.extensions.configuration.Json" Version="2.2.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.1.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
-      <PackageReference Include="SimpleRabbit.NetCore.Service" Version="1.0.117" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="Properties\" />
     </ItemGroup>
     <ItemGroup>
-      <None Update="appsettings.Development.json">
+      <ProjectReference Include="..\..\SimpleRabbit.NetCore.Service\SimpleRabbit.NetCore.Service.csproj" />
+      <ProjectReference Include="..\..\SimpleRabbit.NetCore\SimpleRabbit.NetCore.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Update="appsettings.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

@@ -7,16 +7,11 @@ using Microsoft.Extensions.Logging;
 using SimpleRabbit.NetCore;
 using SimpleRabbit.NetCore.Service;
 using Subscriber.Service.Service;
-using Environment = System.Environment;
 
 namespace Subscriber.Service
 {
     public class Program
     {
-        private static string HostingEnvironment => string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")) ? 
-            EnvironmentName.Development :
-            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-
         public static async Task Main(string[] args)
         {
             try
@@ -24,15 +19,8 @@ namespace Subscriber.Service
                 var builder = new HostBuilder()
                     .ConfigureAppConfiguration((hostingContext, config) =>
                     {
-                        config.AddJsonFile($"appsettings.{HostingEnvironment}.json");
-
-                        hostingContext.HostingEnvironment.EnvironmentName = HostingEnvironment;
-                        config.AddEnvironmentVariables();
-
-                        if (args != null)
-                        {
-                            config.AddCommandLine(args);
-                        }
+                        config.AddJsonFile("appsettings.json");
+                        hostingContext.HostingEnvironment.EnvironmentName = "Development";
                     })
                     .ConfigureServices((context, services) =>
                     {
