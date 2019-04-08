@@ -4,6 +4,14 @@ An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore proj
 
 ## Getting started
 
+### Package Install
+
+There are two packages on Nuget.
+1. SimpleRabbit.Netcore <- has the basics to be able to publish - and listen to queues where not hosting.
+2. SimpleRabbit.Netcore.Service <- has the IHostedService option for running as a host to listen to queues.
+
+Installing is as easy as: `dotnet add package SimpleRabbit.NetCore` or `Install-Package SimpleRabbit.NetCore` depending on your setup.
+
 ### Publishing
 
 ```
@@ -78,7 +86,7 @@ The message handler is chosen based on the CanProcess call. The consumer tag is 
             {
                 Console.WriteLine($"Message contents: {body}");
             }
-            else 
+            else
             {
                 Console.WriteLine($"Empty message: {message.MessageId}")
             }
