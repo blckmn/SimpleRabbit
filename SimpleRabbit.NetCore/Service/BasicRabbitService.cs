@@ -52,8 +52,14 @@ namespace SimpleRabbit.NetCore
         {
             var config = options.Value;
 
+            if (config?.Uri == null)
+            {
+                throw new ArgumentNullException(nameof(config), "Configuration not set for RabbitMQ");    
+            }
+
             _hostnames = config.Hostnames ??
                          (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
+
             _factory = new ConnectionFactory
             {
                 Uri = config.Uri,
@@ -65,10 +71,13 @@ namespace SimpleRabbit.NetCore
 
             _clientName = config.Name ?? Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
 
-            _timer = new Timer(state =>
+            _timer = new Timer(state => 
                 {
                     WatchdogExecution();
-                }, this, Infinite, TimerPeriod
+                }, 
+                this, 
+                Infinite, 
+                TimerPeriod
             );
         }
 
