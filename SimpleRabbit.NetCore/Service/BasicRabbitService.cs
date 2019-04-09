@@ -22,7 +22,7 @@ namespace SimpleRabbit.NetCore
         /*
          Timer is a small hack that if someone publishes, the connection is not held open indefinitely.
          This is due to the threading in the Connection that prevents Console appications from stopping if
-         connection is not closed (i.e. inside a using clause or not calling close). 
+         connection is not closed (i.e. inside a using clause or not calling close).
         */
         private readonly Timer _timer;
         protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
@@ -47,12 +47,19 @@ namespace SimpleRabbit.NetCore
             }
         }
 
+        private string _clientName { get; }
         protected BasicRabbitService(IOptions<RabbitConfiguration> options)
         {
             var config = options.Value;
 
-            _hostnames = config.Hostnames ?? 
+            if (config?.Uri == null)
+            {
+                throw new ArgumentNullException(nameof(config), "Configuration not set for RabbitMQ");    
+            }
+
+            _hostnames = config.Hostnames ??
                          (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
+
             _factory = new ConnectionFactory
             {
                 Uri = config.Uri,
@@ -62,15 +69,20 @@ namespace SimpleRabbit.NetCore
                 RequestedHeartbeat = 5
             };
 
-            _timer = new Timer(state =>
+            _clientName = config.Name ?? Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+
+            _timer = new Timer(state => 
                 {
                     WatchdogExecution();
-                }, this, Infinite, TimerPeriod
+                }, 
+                this, 
+                Infinite, 
+                TimerPeriod
             );
         }
 
         private IConnection _connection;
-        protected IConnection Connection => _connection ?? (_connection = _factory.CreateConnection(_hostnames));
+        protected IConnection Connection => _connection ?? (_connection = _factory.CreateConnection(_hostnames, _clientName));
 
         private IModel _channel;
         protected IModel Channel => _channel ?? (_channel = Connection.CreateModel());
@@ -86,7 +98,7 @@ namespace SimpleRabbit.NetCore
         public void Close()
         {
             lock(this)
-            { 
+            {
                 try
                 {
                     _timer.Change(Infinite, Infinite);
@@ -94,7 +106,7 @@ namespace SimpleRabbit.NetCore
                     _channel?.Dispose();
                     _channel = null;
                 }
-                finally 
+                finally
                 {
                     _connection?.Dispose();
                     _connection = null;

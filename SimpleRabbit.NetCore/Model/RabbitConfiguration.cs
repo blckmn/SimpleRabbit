@@ -7,5 +7,6 @@ namespace SimpleRabbit.NetCore
     {
         public Uri Uri { get; set; }
         public List<string> Hostnames { get; set; }
+        public string Name { get; set; }
     }
 }

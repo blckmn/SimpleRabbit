@@ -32,3 +32,4 @@ packages/
 FolderProfile.pubxml
 *.csproj.DotSettings
 artifacts/
+.vscode/
