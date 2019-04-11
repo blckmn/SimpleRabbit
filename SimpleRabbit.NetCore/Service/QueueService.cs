@@ -55,7 +55,16 @@ namespace SimpleRabbit.NetCore
             {
                 // ignored
             }
-            
+
+            try
+            {
+                Close();
+            }
+            catch
+            {
+                // Ignored
+            }
+
             _retryCount++;
             var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
 
