@@ -50,13 +50,13 @@ namespace SimpleRabbit.NetCore
         {
             while (!_stopped)
             {
-                QueuedMessage message;
+                QueuedMessage queuedMessage;
                 lock (_semaphore)
                 {
-                    message = _queue.FirstOrDefault();
+                    queuedMessage = _queue.FirstOrDefault();
                 }
 
-                if (message == null)
+                if (queuedMessage == null)
                 {
                     _mre.Reset();
                     _mre.WaitOne();
@@ -65,19 +65,19 @@ namespace SimpleRabbit.NetCore
 
                 try
                 {
-                    if (message.Action?.Invoke(message.Message) ?? false)
+                    if (queuedMessage.Action?.Invoke(queuedMessage.Message) ?? false)
                     {
-                        message.Message.Channel?.BasicAck(message.Message.DeliveryTag, false);
+                        queuedMessage.Message.Channel?.BasicAck(queuedMessage.Message.DeliveryTag, false);
                     }
 
                     lock (_semaphore)
                     {
-                        _queue.Remove(message);
+                        _queue.Remove(queuedMessage);
                     }
                 }
                 catch
                 {
-                    message.Message.RegisterError?.Invoke();
+                    queuedMessage.Message.RegisterError?.Invoke();
                     lock (_semaphore)
                     {
                         _queue.Clear();

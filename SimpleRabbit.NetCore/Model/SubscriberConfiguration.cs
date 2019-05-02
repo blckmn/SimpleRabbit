@@ -8,5 +8,6 @@
         public ushort? PrefetchCount { get; set; }
         public int RetryInterval { get; set; }
         public bool AutoBackOff { get; set; }
+        public int HeartBeat { get; set; }
     }
 }
