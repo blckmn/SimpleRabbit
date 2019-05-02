@@ -27,10 +27,7 @@ namespace Subscriber.Service
                         services
                             .AddSingleton<ILoggerFactory, LoggerFactory>()
                             .AddSingleton<ILogger>(ctx => ctx.GetService<ILogger<HostBuilder>>())
-                            .AddSubscriberServices(context.Configuration);
-
-                        services
-                            .AddSingleton<IMessageHandler, MessageProcessorDispatch>()
+                            .AddSubscriberServices(context.Configuration)
                             .AddSingleton<IMessageHandler, MessageProcessor>();
                     })
                     .ConfigureLogging((hostingContext, logging) =>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Timer = System.Timers.Timer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -124,12 +122,6 @@ namespace SimpleRabbit.NetCore
 
         public void Stop()
         {
-            /* shut down any open and running threads */
-            foreach (var service in _tasks)
-            {
-                service.Stop();
-            }
-            _tasks.Clear();
             Close();
         }
 
@@ -144,13 +136,10 @@ namespace SimpleRabbit.NetCore
                 var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
                     () => RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval)));
 
-                string key = null;
-                if (_handler is IDispatchHandler && _queueServiceParams.PrefetchCount > 1)
+                if (_handler.Process(message))
                 {
-                    key = (_handler as IDispatchHandler)?.GetKey(message);
+                    channel.BasicAck(args.DeliveryTag, false);
                 }
-
-                Enqueue(key, message);
                 _retryCount = 0;
             }
             catch (Exception ex)
@@ -159,22 +148,6 @@ namespace SimpleRabbit.NetCore
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
                 RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
             }
-        }
-
-        private readonly List<QueueExecutionService> _tasks = new List<QueueExecutionService>();
-        private void Enqueue(string key, BasicMessage message)
-        {
-            var service = _tasks.FirstOrDefault(t => t.CanEnqueue(key));
-
-            if (service == null)
-            {
-                _logger.LogInformation($"Adding another execution process. Current count is {_tasks.Count}");
-                service = new QueueExecutionService(_tasks);
-                _tasks.Add(service);
-                service.Start();
-            }
-
-            service.Enqueue(new QueuedMessage{ Action = _handler.Process, Message = message, Key = key});
         }
 
         protected override void OnWatchdogExecution()

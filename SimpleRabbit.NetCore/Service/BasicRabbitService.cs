@@ -47,7 +47,7 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-        private string _clientName { get; }
+        private string ClientName { get; }
         protected BasicRabbitService(IOptions<RabbitConfiguration> options)
         {
             var config = options.Value;
@@ -69,7 +69,7 @@ namespace SimpleRabbit.NetCore
                 RequestedHeartbeat = 5
             };
 
-            _clientName = config.Name ?? Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+            ClientName = config.Name ?? Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
 
             _timer = new Timer(state => 
                 {
@@ -82,7 +82,7 @@ namespace SimpleRabbit.NetCore
         }
 
         private IConnection _connection;
-        protected IConnection Connection => _connection ?? (_connection = _factory.CreateConnection(_hostnames, _clientName));
+        protected IConnection Connection => _connection ?? (_connection = _factory.CreateConnection(_hostnames, ClientName));
 
         private IModel _channel;
         protected IModel Channel => _channel ?? (_channel = Connection.CreateModel());
@@ -97,18 +97,23 @@ namespace SimpleRabbit.NetCore
 
         public void Close()
         {
-            lock(this)
+            lock (this)
             {
                 try
                 {
-                    _timer.Change(Infinite, Infinite);
-
-                    _channel?.Dispose();
-                    _channel = null;
+                    try
+                    {
+                        _timer.Change(Infinite, Infinite);
+                        _channel?.Dispose();
+                    }
+                    finally
+                    {
+                        _connection?.Dispose();
+                    }
                 }
                 finally
                 {
-                    _connection?.Dispose();
+                    _channel = null;
                     _connection = null;
                 }
             }
