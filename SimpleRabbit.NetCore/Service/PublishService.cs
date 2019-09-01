@@ -15,7 +15,7 @@ namespace SimpleRabbit.NetCore
     {
         public int InactivityPeriod { get; set; }
 
-        public PublishService(IOptions<RabbitConfiguration> options) : base(options)
+        public PublishService(IOptionsSnapshot<RabbitConfiguration> options) : base(options)
         {
             InactivityPeriod = 30;
         }

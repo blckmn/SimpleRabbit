@@ -26,7 +26,7 @@ namespace SimpleRabbit.NetCore
         private IMessageHandler _handler;
         private int _retryCount;
 
-        public QueueService(IOptions<RabbitConfiguration> options, ILogger<QueueService> logger) : base(options)
+        public QueueService(IOptionsSnapshot<RabbitConfiguration> options, ILogger<QueueService> logger) : base(options)
         {
             _logger = logger;
 
