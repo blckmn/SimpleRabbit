@@ -14,7 +14,9 @@ namespace Publisher
                 .Build();
 
             var services = new ServiceCollection();
-            services.AddPublisherServices(configuration);
+            services
+                .AddPublisherServices()
+                .AddRabbitConfiguration(configuration);
 
             var provider = services.BuildServiceProvider();
 

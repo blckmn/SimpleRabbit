@@ -10,10 +10,14 @@ namespace SimpleRabbit.NetCore.Service
         public static IServiceCollection AddSubscriberServices(this IServiceCollection services, IConfiguration config)
         {
             return services
-                .Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"))
-                .Configure<List<SubscriberConfiguration>>(config.GetSection("Subscribers"))
                 .AddSingleton<IHostedService, SubscriberService>()
                 .AddTransient<IQueueService, QueueService>();
+        }
+
+        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfiguration config)
+        {
+            return services
+                .Configure<List<SubscriberConfiguration>>(config.GetSection("Subscribers"));
         }
     }
 }

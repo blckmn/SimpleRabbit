@@ -28,6 +28,8 @@ namespace Subscriber.Service
                             .AddSingleton<ILoggerFactory, LoggerFactory>()
                             .AddSingleton<ILogger>(ctx => ctx.GetService<ILogger<HostBuilder>>())
                             .AddSubscriberServices(context.Configuration)
+                            .AddRabbitConfiguration(context.Configuration)
+                            .AddSubscriberConfiguration(context.Configuration)
                             .AddSingleton<IMessageHandler, MessageProcessor>();
                     })
                     .ConfigureLogging((hostingContext, logging) =>
