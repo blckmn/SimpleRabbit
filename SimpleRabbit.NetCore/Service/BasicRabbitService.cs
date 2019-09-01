@@ -34,6 +34,8 @@ namespace SimpleRabbit.NetCore
                 _factory = new ConnectionFactory
                 {
                     Uri = config.Uri,
+                    UserName = config.Username,
+                    Password = config.Password,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
