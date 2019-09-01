@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>BLCKMN</Authors>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/blckmn/SimpleRabbit/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/blckmn/SimpleRabbit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/blckmn/SimpleRabbit</RepositoryUrl>
 
@@ -15,6 +15,7 @@
     <Title>SimpleRabbit.NetCore.Service</Title>
     <PackageId>SimpleRabbit.NetCore.Service</PackageId>
     <PackageTags>RabbitMq HostedService Subscribe</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
   </PropertyGroup>
 
