@@ -22,7 +22,9 @@ Installing is as easy as: `dotnet add package SimpleRabbit.NetCore` or `Install-
             .Build();
 
         var services = new ServiceCollection();
-        services.AddPublisherServices(configuration);
+        services
+            .AddPublisherServices()
+            .AddRabbitConfiguration(configuration);
 
         var provider = services.BuildServiceProvider();
 
@@ -60,7 +62,9 @@ The appsettings.json file (to provide connectivity to rabbit):
 
                 /* the rabbit services */
                 services
-                    .AddSubscriberServices(context.Configuration)
+                    .AddSubscriberServices()
+                    .AddRabbitConfiguration(context.Configuration)
+                    .AddSubscriberConfiguration(context.Configuration)
                     .AddSingleton<IMessageHandler, Processor>();
             });
 
@@ -68,7 +72,7 @@ The appsettings.json file (to provide connectivity to rabbit):
     }
 ```
 
-The message handler is chosen based on the CanProcess call. The consumer tag is passed in i.e. tags are matched not queues.
+The message handler is chosen based on the CanProcess call. The consumer tag is passed in i.e. tags are matched not queues. This allows a handler to handle multiple messages from multiple queues.
 ```
     internal class Processor : IMessageHandler
     {
