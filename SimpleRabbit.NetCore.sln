@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleRabbit.NetCore", "SimpleRabbit.NetCore\SimpleRabbit.NetCore.csproj", "{005D39F6-9FA3-4321-8F50-1B5967EBADBE}"
 EndProject
@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscriber.Service", "Examp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Publisher", "Examples\Publisher\Publisher.csproj", "{93B7A899-A58B-410A-A1C6-D8A90A9B7856}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eamples", "Eamples", "{AA718BB1-A244-4FAC-9A32-343DE6BFF318}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{AA718BB1-A244-4FAC-9A32-343DE6BFF318}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
