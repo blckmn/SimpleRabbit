@@ -10,6 +10,7 @@ namespace SimpleRabbit.NetCore
     {
         IBasicProperties GetBasicProperties();
         void Close();
+        string ConfigurationName { get; }
     }
 
     public abstract class BasicRabbitService : IBasicRabbitService
