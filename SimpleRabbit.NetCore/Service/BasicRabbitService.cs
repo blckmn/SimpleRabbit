@@ -30,8 +30,14 @@ namespace SimpleRabbit.NetCore
                 }
 
                 var config = _config.Get(ConfigurationName);
-                _hostnames = config.Hostnames ?? (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
 
+                if (config?.Uri == null)
+                {
+                    throw new ArgumentNullException(nameof(config.Uri), "Rabbit configuration possible not set correctly.");
+                }
+
+                _hostnames = config.Hostnames ?? (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
+                
                 _factory = new ConnectionFactory
                 {
                     Uri = config.Uri,
@@ -75,24 +81,28 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-        private string ClientName { get; }
-        public string ConfigurationName { get; set; }
+        private string ClientName =>
+            _config?.Get(ConfigurationName)?.Name ?? 
+            Environment.GetEnvironmentVariable("COMPUTERNAME") ??
+            Environment.GetEnvironmentVariable("HOSTNAME");
+
+        private string _configurationName;
+        public string ConfigurationName
+        {
+            get => _configurationName;
+            set 
+            { 
+                _configurationName = value;
+                Close();
+            }
+        }
+
         private readonly IOptionsSnapshot<RabbitConfiguration> _config;
 
         protected BasicRabbitService(IOptionsSnapshot<RabbitConfiguration> options)
         {
             _config = options;
-            ConfigurationName = Options.DefaultName;
-
-            var config = options.Value;
-
-            if (config?.Uri == null)
-            {
-                throw new ArgumentNullException(nameof(config), "Configuration not set for RabbitMQ");    
-            }
-
-
-            ClientName = config.Name ?? Environment.GetEnvironmentVariable("COMPUTERNAME") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+            _configurationName = Options.DefaultName;
 
             _timer = new Timer(state => 
                 {
@@ -138,6 +148,7 @@ namespace SimpleRabbit.NetCore
                 {
                     _channel = null;
                     _connection = null;
+                    _factory = null;
                 }
             }
         }
