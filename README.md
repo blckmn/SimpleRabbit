@@ -129,3 +129,56 @@ Additional hostnames can be provided for round robin if required:
         }
     }
 ```
+
+### Making use of multiple Rabbit clusters
+
+Rather than binding using the default extensions, you can configure it yourself and make use of multiple configurations.
+```
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", true)
+                .Build();
+
+            PublishService PublisherFactory(IServiceProvider service, string name)
+            {
+                var p = service.GetService<PublishService>();
+                p.ConfigurationName = name;
+                return p;
+            }
+
+            var services = new ServiceCollection();
+            services
+                .Configure<RabbitConfiguration>("Configuration1", configuration.GetSection("RabbitConfiguration:Configuration1"))
+                .Configure<RabbitConfiguration>("Configuration2", configuration.GetSection("RabbitConfiguration:Configuration2"))
+                .AddTransient<PublishService>()
+                .AddTransient<IPublishService>(c => PublisherFactory(c, "Configuration1"))
+                .AddTransient<IPublishService>(c => PublisherFactory(c, "Configuration2"))
+                .AddTransient(c => c.GetServices<IPublishService>().ToList());
+
+            var provider = services.BuildServiceProvider();
+
+            var publisher = provider.GetService<List<IPublishService>>().FirstOrDefault(p => p.ConfigurationName.Equals("Configuration1"));
+            publisher?.Publish(exchange: "ExchangeName", body: "Test body");
+        }
+    }
+```
+This will give you the ability to inject a `List<IPublishService>` into your class and you can then select the publisher based on the configuration name. 
+
+The `appsettings.json` file will look something like this:
+```
+{
+  "RabbitConfiguration": {
+    "Configuration1": {
+      "Uri": "amqp://username:password@hostname/"
+    },
+    "Configuration2": {
+      "Uri": "amqp://username:password@hostname/"
+    }
+  }
+}
+```
+
+Note the multiple configuration setup is explained here: https://andrewlock.net/using-multiple-instances-of-strongly-typed-settings-with-named-options-in-net-core-2-x/
