@@ -165,7 +165,7 @@ Rather than binding using the default extensions, you can configure it yourself 
         }
     }
 ```
-This will give you the ability to inject a `List<IPublishService>` into your object and you can then select the publisher based on the configuration name. 
+This will give you the ability to inject a `List<IPublishService>` into your class and you can then select the publisher based on the configuration name. 
 
 The `appsettings.json` file will look something like this:
 ```
