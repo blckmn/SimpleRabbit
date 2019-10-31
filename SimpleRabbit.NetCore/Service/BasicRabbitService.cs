@@ -132,6 +132,11 @@ namespace SimpleRabbit.NetCore
         {
             lock (this)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+
                 try
                 {
                     try
@@ -170,7 +175,6 @@ namespace SimpleRabbit.NetCore
             try
             {
                 Close();
-                _timer?.Change(Infinite, Infinite);
                 _timer?.Dispose();
             }
             finally
