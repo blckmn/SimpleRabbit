@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,9 +28,9 @@ namespace Subscriber.Service
                         services
                             .AddSingleton<ILoggerFactory, LoggerFactory>()
                             .AddSingleton<ILogger>(ctx => ctx.GetService<ILogger<HostBuilder>>())
-                            .AddSubscriberServices(context.Configuration)
-                            .AddRabbitConfiguration(context.Configuration)
-                            .AddSubscriberConfiguration(context.Configuration)
+                            .AddSubscriberServices()
+                            .Configure<RabbitConfiguration>(context.Configuration.GetSection("RabbitConfiguration"))
+                            .Configure<List<SubscriberConfiguration>>(context.Configuration.GetSection("Subscribers"))
                             .AddSingleton<IMessageHandler, MessageProcessor>();
                     })
                     .ConfigureLogging((hostingContext, logging) =>

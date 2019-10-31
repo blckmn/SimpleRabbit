@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace SimpleRabbit.NetCore
 {
@@ -9,12 +8,6 @@ namespace SimpleRabbit.NetCore
         {
             return services
                 .AddTransient<IPublishService, PublishService>();
-        }
-
-        public static IServiceCollection AddRabbitConfiguration(this IServiceCollection services, IConfiguration config)
-        {
-            return services
-                .Configure<RabbitConfiguration>(config.GetSection("RabbitConfiguration"));
         }
     }
 }

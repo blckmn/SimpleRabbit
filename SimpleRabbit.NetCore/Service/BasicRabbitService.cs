@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
@@ -10,7 +9,6 @@ namespace SimpleRabbit.NetCore
     {
         IBasicProperties GetBasicProperties();
         void Close();
-        string ConfigurationName { get; }
     }
 
     public abstract class BasicRabbitService : IBasicRabbitService
@@ -29,18 +27,18 @@ namespace SimpleRabbit.NetCore
                     return _factory;
                 }
 
-                var config = _config.Get(ConfigurationName);
+                var config = _config;
 
-                if (config?.Uri == null)
+                if (config?.Username == null || config.Password == null)
                 {
-                    throw new ArgumentNullException(nameof(config.Uri), "Rabbit configuration possible not set correctly.");
+                    throw new ArgumentNullException(nameof(_config), "Rabbit configuration possible not set correctly.");
                 }
 
-                _hostnames = config.Hostnames ?? (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
+                _hostnames = config.Hostnames;
                 
                 _factory = new ConnectionFactory
                 {
-                    Uri = config.Uri,
+                    VirtualHost = config.VirtualHost,
                     UserName = config.Username,
                     Password = config.Password,
                     AutomaticRecoveryEnabled = true,
@@ -82,27 +80,15 @@ namespace SimpleRabbit.NetCore
         }
 
         private string ClientName =>
-            _config?.Get(ConfigurationName)?.Name ?? 
+            _config?.Name ?? 
             Environment.GetEnvironmentVariable("COMPUTERNAME") ??
             Environment.GetEnvironmentVariable("HOSTNAME");
 
-        private string _configurationName;
-        public string ConfigurationName
-        {
-            get => _configurationName;
-            set 
-            { 
-                _configurationName = value;
-                Close();
-            }
-        }
+        private readonly RabbitConfiguration _config;
 
-        private readonly IOptionsSnapshot<RabbitConfiguration> _config;
-
-        protected BasicRabbitService(IOptionsSnapshot<RabbitConfiguration> options)
+        protected BasicRabbitService(RabbitConfiguration config)
         {
-            _config = options;
-            _configurationName = Options.DefaultName;
+            _config = config;
 
             _timer = new Timer(state => 
                 {

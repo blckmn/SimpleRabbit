@@ -13,12 +13,10 @@ namespace Publisher
                 .AddJsonFile("appsettings.json", true)
                 .Build();
 
-            var services = new ServiceCollection();
-            services
+            var provider = new ServiceCollection()
+                .Configure<RabbitConfiguration>(configuration.GetSection("RabbitConfiguration"))
                 .AddPublisherServices()
-                .AddRabbitConfiguration(configuration);
-
-            var provider = services.BuildServiceProvider();
+                .BuildServiceProvider();
 
             var publisher = provider.GetService<IPublishService>();
 
