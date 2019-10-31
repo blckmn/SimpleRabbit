@@ -132,27 +132,36 @@ namespace SimpleRabbit.NetCore
         {
             lock (this)
             {
+                var channel = _channel;
+                var connection = _connection;
+
+                _channel = null;
+                _connection = null;
+
                 try
                 {
                     try
                     {
-                        _timer.Change(Infinite, Infinite);
-                        _channel?.Dispose();
+                        _timer?.Change(Infinite, Infinite);
+                        channel?.Dispose();
                     }
                     finally
                     {
-                        _connection?.Dispose();
+                        connection?.Dispose();
                     }
+                }
+                catch (ObjectDisposedException)
+                {
+
                 }
                 finally
                 {
-                    _channel = null;
-                    _connection = null;
                     _factory = null;
                 }
             }
         }
 
+        private bool _disposed;
         public void Dispose()
         {
             Dispose(true);
@@ -161,9 +170,21 @@ namespace SimpleRabbit.NetCore
 
         protected virtual void Dispose(bool disposing)
         {
-            Close();
-            _timer?.Change(Infinite, Infinite);
-            _timer?.Dispose();
+            if (!disposing || _disposed)
+            {
+                return;
+            }
+
+            try
+            {
+                Close();
+                _timer?.Change(Infinite, Infinite);
+                _timer?.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
 
         ~BasicRabbitService()
