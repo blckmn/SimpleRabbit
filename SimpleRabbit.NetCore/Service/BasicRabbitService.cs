@@ -132,31 +132,23 @@ namespace SimpleRabbit.NetCore
         {
             lock (this)
             {
-                var channel = _channel;
-                var connection = _connection;
-
-                _channel = null;
-                _connection = null;
-
                 try
                 {
                     try
                     {
                         _timer?.Change(Infinite, Infinite);
-                        channel?.Dispose();
+                        _channel?.Dispose();
                     }
                     finally
                     {
-                        connection?.Dispose();
+                        _connection?.Dispose();
                     }
-                }
-                catch (ObjectDisposedException)
-                {
-
                 }
                 finally
                 {
                     _factory = null;
+                    _channel = null;
+                    _connection = null;
                 }
             }
         }
