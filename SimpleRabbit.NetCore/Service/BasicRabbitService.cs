@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using RabbitMQ.Client;
 
@@ -27,23 +28,37 @@ namespace SimpleRabbit.NetCore
                 {
                     return _factory;
                 }
-
-                var config = _config;
-
-                if (string.IsNullOrWhiteSpace(config?.Username) || string.IsNullOrWhiteSpace(config.Password) || !(config.Hostnames?.Any() ?? false))
+                /// factory instaniation logic.
+                if (_config.Uri?.Host == null && (_config.Hostnames == null || !_config.Hostnames.Any()))
                 {
-                    throw new Exception("Rabbit configuration error. Username, password or hostnames not set correctly.");
+                    throw new ArgumentException("Rabbit Configuration: No Uri or Hostnames provided");
                 }
 
-                _hostnames = config.Hostnames;
-                
+                if (_config.Uri?.UserInfo == null || (string.IsNullOrWhiteSpace(_config.Username) && string.IsNullOrWhiteSpace(_config.Password)))
+                {
+                    throw new InvalidCredentialException("Username or password is missing");
+                }
+
+                _hostnames = _config.Hostnames ?? new List<string>();
+
+                Uri uri = null;
+                if (string.IsNullOrWhiteSpace(_config.Uri?.Host)) 
+                {
+                    // Randomize the first host chosen, such that load one particular cluster is not overloaded.
+                    var i = new Random().Next(0, _hostnames.Count);
+                    uri = new Uri($"amqp://{_config.Hostnames[i]}");
+                }
+                else
+                {
+                    _hostnames.Add(_config.Uri.Host);
+                    uri = _config.Uri;
+                }
+
                 _factory = new ConnectionFactory
                 {
-                    VirtualHost = string.IsNullOrWhiteSpace(config.VirtualHost) ? 
-                        ConnectionFactory.DefaultVHost : 
-                        config.VirtualHost,
-                    UserName = config.Username,
-                    Password = config.Password,
+                    Uri = uri,
+                    UserName = _config.Username,
+                    Password = _config.Password,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
@@ -104,6 +119,9 @@ namespace SimpleRabbit.NetCore
         }
 
         private IConnection _connection;
+        /// <summary>
+        /// ClientName is used only for human reference from RabbitMQ UI.
+        /// </summary>
         protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
 
         private IModel _channel;

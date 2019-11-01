@@ -16,11 +16,11 @@ namespace SimpleRabbit.NetCore.Service
         private readonly IServiceProvider _provider;
         private readonly IList<SubscriberConfiguration> _subscribers;
 
-        public SubscriberService(ILogger<SubscriberService> logger, IOptions<List<SubscriberConfiguration>> options, IServiceProvider provider)
+        public SubscriberService(ILogger<SubscriberService> logger, List<SubscriberConfiguration> options, IServiceProvider provider)
         {
             _logger = logger;
             _provider = provider;
-            _subscribers = options.Value;
+            _subscribers = options;
         }
 
         private readonly List<IQueueService> _queueServices = new List<IQueueService>();
