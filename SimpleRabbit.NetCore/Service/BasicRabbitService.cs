@@ -28,47 +28,30 @@ namespace SimpleRabbit.NetCore
                 {
                     return _factory;
                 }
-                /// factory instaniation logic.
-                if (_config.Uri?.Host == null && (_config.Hostnames == null || !_config.Hostnames.Any()))
-                {
-                    throw new ArgumentException("Rabbit Configuration: No Uri or Hostnames provided");
-                }
 
-                if (string.IsNullOrWhiteSpace(_config.Uri?.UserInfo) && (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password)))
+                if (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password))
                 {
                     throw new InvalidCredentialException("Username or password is missing");
                 }
 
-                _hostnames = _config.Hostnames ?? new List<string>();
+                /// factory instaniation logic.
+                if (_config.Hostnames == null || !_config.Hostnames.Any())
+                {
+                    throw new ArgumentNullException(nameof(_config.Hostnames), "Rabbit Configuration: No Hostnames provided");
+                }
 
-                Uri uri = null;
-                if (string.IsNullOrWhiteSpace(_config.Uri?.Host)) 
-                {
-                    // Randomize the first host chosen, such that load one particular cluster is not overloaded.
-                    var i = new Random().Next(0, _hostnames.Count);
-                    uri = new Uri($"amqp://{_config.Hostnames[i]}");
-                }
-                else
-                {
-                    _hostnames.Add(_config.Uri.Host);
-                    uri = _config.Uri;
-                }
+                _hostnames = _config.Hostnames;
 
                 _factory = new ConnectionFactory
                 {
-                    Uri = uri,
+                    UserName = _config.Username,
+                    Password = _config.Password,
+                    VirtualHost = _config.VirtualHost ?? ConnectionFactory.DefaultVHost,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
                     RequestedHeartbeat = 5
                 };
-
-                // If user info is in uri, don't override them with username password.
-                if (string.IsNullOrWhiteSpace(_config.Uri?.UserInfo))
-                {
-                    _factory.UserName = _config.Username;
-                    _factory.Password = _config.Password;
-                }
 
                 return _factory;
             }

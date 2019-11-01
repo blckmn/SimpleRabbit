@@ -25,7 +25,7 @@ namespace Publisher
             for (var index = 0; index < 1000; index++)
             {
                 Console.Write($"Publishing {index} : ");
-                publisher.Publish("Example", body: $"This is a test message - {index} - {DateTime.Now.ToLongDateString()}");
+                publisher.Publish("MyFeed.Api", body: $"This is a test message - {index} - {DateTime.Now.ToLongDateString()}");
                 Console.WriteLine("done");
             }
 
