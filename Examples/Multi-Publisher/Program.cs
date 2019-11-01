@@ -29,6 +29,7 @@ namespace Publisher
             services
                 .AddSingleton<IPublishService>(c => PublisherFactory(c, "Configuration1", configuration.GetSection("RabbitConfigurations:Configuration1")))
                 .AddSingleton<IPublishService>(c => PublisherFactory(c, "Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2")))
+                .AddSingleton<IPublishService>(c => PublisherFactory(c, "Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3")))
                 .AddTransient(c => c.GetServices<IPublishService>().ToList());
 
             var provider = services.BuildServiceProvider();

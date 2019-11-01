@@ -34,7 +34,7 @@ namespace SimpleRabbit.NetCore
                     throw new ArgumentException("Rabbit Configuration: No Uri or Hostnames provided");
                 }
 
-                if (_config.Uri?.UserInfo == null || (string.IsNullOrWhiteSpace(_config.Username) && string.IsNullOrWhiteSpace(_config.Password)))
+                if (string.IsNullOrWhiteSpace(_config.Uri?.UserInfo) && (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password)))
                 {
                     throw new InvalidCredentialException("Username or password is missing");
                 }
@@ -57,13 +57,18 @@ namespace SimpleRabbit.NetCore
                 _factory = new ConnectionFactory
                 {
                     Uri = uri,
-                    UserName = _config.Username,
-                    Password = _config.Password,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
                     RequestedHeartbeat = 5
                 };
+
+                // If user info is in uri, don't override them with username password.
+                if (string.IsNullOrWhiteSpace(_config.Uri?.UserInfo))
+                {
+                    _factory.UserName = _config.Username;
+                    _factory.Password = _config.Password;
+                }
 
                 return _factory;
             }
