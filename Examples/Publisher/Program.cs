@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SimpleRabbit.NetCore;
 
 namespace Publisher
@@ -15,6 +16,7 @@ namespace Publisher
 
             var provider = new ServiceCollection()
                 .Configure<RabbitConfiguration>(configuration.GetSection("RabbitConfiguration"))
+                .AddSingleton(c => c.GetService<IOptions<RabbitConfiguration>>()?.Value)
                 .AddPublisherServices()
                 .BuildServiceProvider();
 
