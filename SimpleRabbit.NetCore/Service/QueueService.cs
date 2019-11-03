@@ -1,7 +1,6 @@
 ﻿using System;
 using Timer = System.Timers.Timer;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -26,7 +25,7 @@ namespace SimpleRabbit.NetCore
         private IMessageHandler _handler;
         private int _retryCount;
 
-        public QueueService(IOptionsSnapshot<RabbitConfiguration> options, ILogger<QueueService> logger) : base(options)
+        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options)
         {
             _logger = logger;
 

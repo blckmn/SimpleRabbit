@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
@@ -15,7 +14,7 @@ namespace SimpleRabbit.NetCore
     {
         public int InactivityPeriod { get; set; }
 
-        public PublishService(IOptionsSnapshot<RabbitConfiguration> options) : base(options)
+        public PublishService(RabbitConfiguration options) : base(options)
         {
             InactivityPeriod = 30;
         }

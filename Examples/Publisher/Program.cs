@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SimpleRabbit.NetCore;
 
 namespace Publisher
@@ -13,12 +14,11 @@ namespace Publisher
                 .AddJsonFile("appsettings.json", true)
                 .Build();
 
-            var services = new ServiceCollection();
-            services
+            var provider = new ServiceCollection()
+                .Configure<RabbitConfiguration>(configuration.GetSection("RabbitConfiguration"))
+                .AddSingleton(c => c.GetService<IOptions<RabbitConfiguration>>()?.Value)
                 .AddPublisherServices()
-                .AddRabbitConfiguration(configuration);
-
-            var provider = services.BuildServiceProvider();
+                .BuildServiceProvider();
 
             var publisher = provider.GetService<IPublishService>();
 
