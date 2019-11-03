@@ -39,7 +39,9 @@ namespace SimpleRabbit.NetCore
                 
                 _factory = new ConnectionFactory
                 {
-                    VirtualHost = config.VirtualHost,
+                    VirtualHost = string.IsNullOrWhiteSpace(config.VirtualHost) ? 
+                        ConnectionFactory.DefaultVHost : 
+                        config.VirtualHost,
                     UserName = config.Username,
                     Password = config.Password,
                     AutomaticRecoveryEnabled = true,
