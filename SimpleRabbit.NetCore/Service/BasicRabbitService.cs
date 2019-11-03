@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using RabbitMQ.Client;
 
@@ -29,9 +30,9 @@ namespace SimpleRabbit.NetCore
 
                 var config = _config;
 
-                if (config?.Username == null || config.Password == null)
+                if (string.IsNullOrWhiteSpace(config?.Username) || string.IsNullOrWhiteSpace(config.Password) || !(config.Hostnames?.Any() ?? false))
                 {
-                    throw new ArgumentNullException(nameof(_config), "Rabbit configuration possible not set correctly.");
+                    throw new Exception("Rabbit configuration error. Username, password or hostnames not set correctly.");
                 }
 
                 _hostnames = config.Hostnames;
