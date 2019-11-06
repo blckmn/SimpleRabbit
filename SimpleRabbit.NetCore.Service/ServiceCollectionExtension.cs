@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 
 namespace SimpleRabbit.NetCore.Service
 {
@@ -12,7 +14,6 @@ namespace SimpleRabbit.NetCore.Service
                 .AddSingleton<IHostedService, SubscriberService>()
                 .AddTransient<IQueueService, QueueService>();
         }
-
         public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfigurationSection config)
         {
             return services

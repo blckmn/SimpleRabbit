@@ -46,7 +46,7 @@ namespace SimpleRabbit.NetCore
                 {
                     UserName = _config.Username,
                     Password = _config.Password,
-                    VirtualHost = _config.VirtualHost ?? ConnectionFactory.DefaultVHost,
+                    VirtualHost = string.IsNullOrWhiteSpace(_config.VirtualHost) ? ConnectionFactory.DefaultVHost : _config.VirtualHost,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,

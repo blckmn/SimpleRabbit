@@ -15,8 +15,7 @@ namespace Publisher
                 .Build();
 
             var provider = new ServiceCollection()
-                .Configure<RabbitConfiguration>(configuration.GetSection("RabbitConfiguration"))
-                .AddSingleton(c => c.GetService<IOptions<RabbitConfiguration>>()?.Value)
+                .AddRabbitConfiguration(configuration.GetSection("RabbitConfiguration"))
                 .AddPublisherServices()
                 .BuildServiceProvider();
 
