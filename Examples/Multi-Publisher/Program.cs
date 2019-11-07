@@ -38,7 +38,7 @@ namespace Publisher
             var publisher = provider.GetRequiredService<List<NamedService<IPublishService>>>().FirstOrDefault(p => p.Name.Equals("Configuration1"));
 
             Console.Write($"Publishing: ");
-            publisher.Service.Publish("MyFeed.Api", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
+            publisher.Service.Publish("Example", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
             Console.WriteLine("done");
 
             publisher.Service.Close();

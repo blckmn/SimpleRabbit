@@ -31,10 +31,9 @@ namespace SimpleRabbit.NetCore
 
                 if (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password))
                 {
-                    throw new InvalidCredentialException("Username or password is missing");
+                    throw new InvalidCredentialException("Rabbit Configuration: Username or Password is missing");
                 }
 
-                /// factory instaniation logic.
                 if (_config.Hostnames == null || !_config.Hostnames.Any())
                 {
                     throw new ArgumentNullException(nameof(_config.Hostnames), "Rabbit Configuration: No Hostnames provided");
