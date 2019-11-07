@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleRabbit.NetCore;
+using SimpleRabbit.NetCore.Publisher;
 
 namespace Publisher
 {
@@ -15,33 +17,25 @@ namespace Publisher
                 .AddJsonFile("appsettings.json", true)
                 .Build();
 
-            
-
-            NamedService<IPublishService> PublisherFactory(IServiceProvider service, string name,IConfigurationSection section)
-            {
-                var p = new NamedService<IPublishService>();
-                p.Name = name;
-                p.Service = new PublishService(section.Get<RabbitConfiguration>());
-                return p;
-            }
-
             var services = new ServiceCollection();
 
             services
-                .AddSingleton(c => PublisherFactory(c, "Configuration1", configuration.GetSection("RabbitConfigurations:Configuration1")))
-                .AddSingleton(c => PublisherFactory(c, "Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2")))
-                .AddSingleton(c => PublisherFactory(c, "Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3")))
-                .AddTransient(c => c.GetServices<NamedService<IPublishService>>().ToList());
+                .Configure<RabbitConfiguration>("Configuration1",configuration.GetSection("RabbitConfigurations:Configuration1"))
+                .Configure<RabbitConfiguration>("Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2"))
+                .Configure<RabbitConfiguration>("Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3"))
+                .AddSingleton<PublisherFactory>();
 
             var provider = services.BuildServiceProvider();
-
-            var publisher = provider.GetRequiredService<List<NamedService<IPublishService>>>().FirstOrDefault(p => p.Name.Equals("Configuration1"));
-
-            Console.Write($"Publishing: ");
-            publisher.Service.Publish("Example", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
+            var factory = provider.GetRequiredService<PublisherFactory>();
+            var publisher = factory.GetPublisher("Configuration1");
+            for (int i = 0; i < 3; i++)
+            {
+                Console.WriteLine($"Publishing: {i}");
+                publisher.Publish("Example", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
+            }
             Console.WriteLine("done");
 
-            publisher.Service.Close();
+            publisher.Close();
         }
     }
 }
