@@ -20,10 +20,10 @@ namespace Publisher
             var services = new ServiceCollection();
 
             services
-                .Configure<RabbitConfiguration>("Configuration1",configuration.GetSection("RabbitConfigurations:Configuration1"))
-                .Configure<RabbitConfiguration>("Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2"))
-                .Configure<RabbitConfiguration>("Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3"))
-                .AddSingleton<PublisherFactory>();
+                .AddRabbitConfiguration("Configuration1", configuration.GetSection("RabbitConfigurations:Configuration1"))
+                .AddRabbitConfiguration("Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2"))
+                .AddRabbitConfiguration("Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3"))
+                .AddPublisherFactory();
 
             var provider = services.BuildServiceProvider();
             var factory = provider.GetRequiredService<PublisherFactory>();

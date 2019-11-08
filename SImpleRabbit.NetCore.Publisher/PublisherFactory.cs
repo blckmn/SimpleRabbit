@@ -7,6 +7,9 @@ namespace SimpleRabbit.NetCore.Publisher
     /// <summary>
     /// A Factory that will instantiate singleton publisher instance for each configuration
     /// </summary>
+    /// <remarks>
+    /// Relies On <see cref="RabbitConfiguration"/> to be configured before this method to provide it configurations.
+    /// </remarks>
     public class PublisherFactory : IDisposable
     {
         private readonly IOptionsMonitor<RabbitConfiguration> _optionsMonitor;
@@ -39,7 +42,6 @@ namespace SimpleRabbit.NetCore.Publisher
 
         private IPublishService CreatePublisher(string name)
         {
-            Console.Write($"Created: ");
             var options = _optionsMonitor.Get(name);
             var publisher = new PublishService(options);
 
