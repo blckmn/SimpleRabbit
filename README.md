@@ -37,7 +37,13 @@ The appsettings.json file (to provide connectivity to rabbit):
 ```
     {
         "RabbitConfiguration": {
-            "Uri": "amqp://username:password@hostname/"
+            "Username": "username",
+            "Password": "password",
+            "VirtualHost": "/",
+            "Hostnames": [
+                "host1",
+                "host2"
+            ]
         }
     }
 ```
@@ -104,7 +110,13 @@ Subscribers are a list (of queues to consume), and they are auto wired up to the
 ```
     {
         "RabbitConfiguration": {
-            "Uri": "amqp://username:password@hostname/"
+            "Username": "username",
+            "Password": "password",
+            "VirtualHost": "/",
+            "Hostnames": [
+                "host1",
+                "host2"
+            ]
         },
         "Subscribers": [
             {
@@ -112,21 +124,6 @@ Subscribers are a list (of queues to consume), and they are auto wired up to the
                 "QueueName": "Test"
             }
         ]
-    }
-```
-
-### Extra configuration
-
-Additional hostnames can be provided for round robin if required:
-```
-    {
-        "RabbitConfiguration": {
-            "Uri": "amqp://username:password@hostname/",
-            "Hostnames": [
-                "host1",
-                "host2"
-            ]
-        }
     }
 ```
 
@@ -172,10 +169,22 @@ The `appsettings.json` file will look something like this:
 {
   "RabbitConfiguration": {
     "Configuration1": {
-      "Uri": "amqp://username:password@hostname/"
+        "Username": "username",
+        "Password": "password",
+        "VirtualHost": "/",
+        "Hostnames": [
+            "host1",
+            "host2"
+        ]
     },
     "Configuration2": {
-      "Uri": "amqp://username:password@hostname/"
+        "Username": "username",
+        "Password": "password",
+        "VirtualHost": "/",
+        "Hostnames": [
+            "host1",
+            "host2"
+        ]
     }
   }
 }
