@@ -8,25 +8,19 @@
     <PackageProjectUrl>https://github.com/blckmn/SimpleRabbit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/blckmn/SimpleRabbit</RepositoryUrl>
 
-    <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
+    <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Provides a factory that can be used to have multiple rabbit configurations</Description>
     <Copyright>Copyright © BLCKMN 2018</Copyright>
-    <Summary>A simple DotNetCore (2.1) wrapper for the RabbitMQ client.</Summary>
+    <Summary>A simple DotNetCore (2.1) HostedService Subscriber wrapper for the RabbitMQ client.</Summary>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <Title>SimpleRabbit.NetCore</Title>
-    <PackageId>SimpleRabbit.NetCore</PackageId>
-    <PackageTags>RabbitMq Publish</PackageTags>
+    <Title>SimpleRabbit.NetCore.Service</Title>
+    <PackageId>SimpleRabbit.NetCore.Service</PackageId>
+    <PackageTags>RabbitMq HostedService Subscribe</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SimpleRabbit.NetCore\SimpleRabbit.NetCore.csproj" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
-    <PackageReference Include="RabbitMq.Client" Version="5.1.2" />
   </ItemGroup>
 
 </Project>

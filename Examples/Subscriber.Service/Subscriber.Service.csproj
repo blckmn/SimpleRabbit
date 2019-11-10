@@ -24,7 +24,6 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\SimpleRabbit.NetCore.Service\SimpleRabbit.NetCore.Service.csproj" />
-      <ProjectReference Include="..\..\SimpleRabbit.NetCore\SimpleRabbit.NetCore.csproj" />
     </ItemGroup>
     <ItemGroup>
       <None Update="appsettings.json">

@@ -8,11 +8,10 @@
   <ItemGroup>
     <PackageReference Include="microsoft.extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="microsoft.extensions.DependencyInjection" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SimpleRabbit.NetCore\SimpleRabbit.NetCore.csproj" />
+    <ProjectReference Include="..\..\SImpleRabbit.NetCore.Publisher\SimpleRabbit.NetCore.Publisher.csproj" />
   </ItemGroup>
 
   <ItemGroup>
