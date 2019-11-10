@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using RabbitMQ.Client;
 
@@ -28,22 +29,23 @@ namespace SimpleRabbit.NetCore
                     return _factory;
                 }
 
-                var config = _config;
-
-                if (string.IsNullOrWhiteSpace(config?.Username) || string.IsNullOrWhiteSpace(config.Password) || !(config.Hostnames?.Any() ?? false))
+                if (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password))
                 {
-                    throw new Exception("Rabbit configuration error. Username, password or hostnames not set correctly.");
+                    throw new InvalidCredentialException("Rabbit Configuration: Username or Password is missing");
                 }
 
-                _hostnames = config.Hostnames;
-                
+                if (_config.Hostnames == null || !_config.Hostnames.Any())
+                {
+                    throw new ArgumentNullException(nameof(_config.Hostnames), "Rabbit Configuration: No Hostnames provided");
+                }
+
+                _hostnames = _config.Hostnames;
+
                 _factory = new ConnectionFactory
                 {
-                    VirtualHost = string.IsNullOrWhiteSpace(config.VirtualHost) ? 
-                        ConnectionFactory.DefaultVHost : 
-                        config.VirtualHost,
-                    UserName = config.Username,
-                    Password = config.Password,
+                    UserName = _config.Username,
+                    Password = _config.Password,
+                    VirtualHost = string.IsNullOrWhiteSpace(_config.VirtualHost) ? ConnectionFactory.DefaultVHost : _config.VirtualHost,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
@@ -104,6 +106,9 @@ namespace SimpleRabbit.NetCore
         }
 
         private IConnection _connection;
+        /// <summary>
+        /// ClientName is used only for human reference from RabbitMQ UI.
+        /// </summary>
         protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
 
         private IModel _channel;
