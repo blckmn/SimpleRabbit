@@ -21,14 +21,15 @@ namespace Subscriber.Service
                 var builder = new HostBuilder()
                     .ConfigureAppConfiguration((hostingContext, config) =>
                     {
-                        config.AddJsonFile("appsettings.json");
+                        config.AddJsonFile("appsettings.json",false,reloadOnChange:true);
                         hostingContext.HostingEnvironment.EnvironmentName = "Development";
                     })
                     .ConfigureServices((context, services) =>
                     {
                         services
                             .AddSingleton<IMessageHandler,MessageProcessor>()
-                            .AddSubscriberConfiguration(context.Configuration.GetSection("RabbitConfiguration"))
+                            .AddSubscriberConfiguration(context.Configuration.GetSection("RabbitConfiguration"),"name")
+                            .AddSubscriberConfiguration(context.Configuration.GetSection("RabbitConfiguration2"), "name2")
                             .AddSubscriberServices();
                     })
                     .ConfigureLogging((hostingContext, logging) =>

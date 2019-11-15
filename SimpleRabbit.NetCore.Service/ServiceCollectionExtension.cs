@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 
 namespace SimpleRabbit.NetCore.Service
@@ -15,28 +16,28 @@ namespace SimpleRabbit.NetCore.Service
         /// <param name="services"> the <see cref="IServiceCollection"/> to register the subscriber service to </param>
         /// <returns>the <see cref="IServiceCollection"/></returns>
         /// <remarks>
-        /// Relies On <see cref="SubscriberConfiguration"/> to be configured before this method, 
+        /// Relies On <see cref="QueueConfiguration"/> to be configured before this method, 
         /// which can be done via <see cref="AddSubscriberConfiguration(IServiceCollection, IConfigurationSection)"/>
         /// </remarks>
         public static IServiceCollection AddSubscriberServices(this IServiceCollection services)
         {
             return services
-                .AddSingleton<IHostedService, SubscriberService>()
-                .AddTransient<IQueueService, QueueService>()
-                .AddSingleton((provider) =>
-                 {
-                     return provider.GetService<IOptions<List<SubscriberConfiguration>>>().Value;
-                 });
+                .AddHostedService<QueueFactory>()
+                .AddTransient<IQueueService, QueueService>();
         }
+
         /// <summary>
-        /// configure the List <see cref="List{T}"/> of <see cref="SubscriberConfiguration"/> to <see cref="IServiceCollection"/>
+        /// configure the List <see cref="List{T}"/> of <see cref="QueueConfiguration"/> to <see cref="IServiceCollection"/>
         /// </summary>
         /// <param name="services">the <see cref="IServiceCollection"/> to configure</param>
         /// <param name="config">the configuration section to use</param>
         /// <returns>the <see cref="IServiceCollection"/></returns>
-        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfigurationSection config)
+        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfigurationSection config, string name="")
         {
-            return services.Configure<List<SubscriberConfiguration>>(config);
+            // This will only be instaniated and NEVER updated
+            services.Configure<List<Subscribers>>(s=>s.Add(new Subscribers { Name = name}));
+
+            return services.Configure<SubscriberConfiguration>(name,config);
         }
     }
 }
