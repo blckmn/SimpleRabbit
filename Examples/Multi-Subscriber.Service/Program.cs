@@ -26,10 +26,13 @@ namespace Subscriber.Service
                     })
                     .ConfigureServices((context, services) =>
                     {
+                        var config = context.Configuration;
                         services
                             .AddSingleton<IMessageHandler,MessageProcessor>()
-                            .AddSubscriberConfiguration(context.Configuration.GetSection("RabbitConfiguration"),"name")
-                            .AddSubscriberConfiguration(context.Configuration.GetSection("RabbitConfiguration2"), "name2")
+                            .AddRabbitConfiguration("name",config.GetSection("RabbitConfiguration"))
+                            .AddRabbitConfiguration("name2",config.GetSection("RabbitConfiguration2"))
+                            .AddSubscriberConfiguration("name",context.Configuration.GetSection("RabbitConfiguration:Subscribers"))
+                            .AddSubscriberConfiguration("name2",context.Configuration.GetSection("RabbitConfiguration2:Subscribers"))
                             .AddSubscriberServices();
                     })
                     .ConfigureLogging((hostingContext, logging) =>

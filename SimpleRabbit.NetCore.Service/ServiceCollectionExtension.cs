@@ -27,17 +27,33 @@ namespace SimpleRabbit.NetCore.Service
         }
 
         /// <summary>
-        /// configure the List <see cref="List{T}"/> of <see cref="QueueConfiguration"/> to <see cref="IServiceCollection"/>
+        /// configure the a named list of <see cref="QueueConfiguration"/> to <see cref="IServiceCollection"/>
         /// </summary>
         /// <param name="services">the <see cref="IServiceCollection"/> to configure</param>
         /// <param name="config">the configuration section to use</param>
         /// <returns>the <see cref="IServiceCollection"/></returns>
-        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfigurationSection config, string name="")
+        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services,string name, IConfigurationSection config)
         {
             // This will only be instaniated and NEVER updated
             services.Configure<List<Subscribers>>(s=>s.Add(new Subscribers { Name = name}));
 
-            return services.Configure<SubscriberConfiguration>(name,config);
+            return services.Configure<List<QueueConfiguration>>(name,config);
         }
+
+        /// <summary>
+        /// configure the default list of <see cref="QueueConfiguration" /> to <see cref="IServiceCollection"/>
+        /// </summary>
+        /// <param name="services"> the <see cref="IServiceCollection"/> to configure</param>
+        /// <param name="config">the configuration esction to use</param>
+        /// <returns></returns>
+        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, IConfigurationSection config)
+        {
+            // This will only be instaniated and NEVER updated
+            services.Configure<List<Subscribers>>(s => s.Add(new Subscribers { Name = Options.DefaultName }));
+
+            return services.Configure<List<QueueConfiguration>>(Options.DefaultName, config);
+        }
+
+
     }
 }

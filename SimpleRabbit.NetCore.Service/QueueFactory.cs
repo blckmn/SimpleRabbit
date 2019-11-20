@@ -19,20 +19,26 @@ namespace SimpleRabbit.NetCore.Service
         /// This is a hack.
         /// </summary>
         private readonly List<Subscribers> _subscribers;
-        private readonly IOptionsMonitor<SubscriberConfiguration> _configuration;
+        private readonly IOptionsMonitor<List<QueueConfiguration>> _queueconfig;
+        private readonly IOptionsMonitor<RabbitConfiguration> _rabbitconfig;
         private readonly IServiceProvider _provider;
         private readonly IEnumerable<IMessageHandler> _handlers;
         private readonly Dictionary<string,List<IQueueService>> _queueServices = new Dictionary<string,List<IQueueService>>();
 
-        public QueueFactory(ILogger<QueueFactory> logger, IOptions<List<Subscribers>> subscribers, IOptionsMonitor<SubscriberConfiguration> configuration, IServiceProvider provider, IEnumerable<IMessageHandler> handlers)
+        public QueueFactory(ILogger<QueueFactory> logger, 
+            IOptions<List<Subscribers>> subscribers, 
+            IOptionsMonitor<List<QueueConfiguration>> queueconfig, 
+            IOptionsMonitor<RabbitConfiguration> rabbitconfig,
+            IServiceProvider provider, IEnumerable<IMessageHandler> handlers)
         {
             _logger = logger;
             _subscribers = subscribers.Value;
-            _configuration = configuration;
+            _queueconfig = queueconfig;
+            _rabbitconfig = rabbitconfig;
             _provider = provider;
             _handlers = handlers;
 
-            configuration.OnChange((config, name) =>
+            queueconfig.OnChange((config, name) =>
             {
                 //Recreate all queues (this is inefficient, should perform a check on changed configurations).
 
@@ -48,12 +54,12 @@ namespace SimpleRabbit.NetCore.Service
         /// <param name="name">the name of the cluster as defined in Configuration</param>
         public void CreateQueues(string name)
         {
-
-            var config = _configuration.Get(name);
+            var rabbitconfig = _rabbitconfig.Get(name);
+            var queues = _queueconfig.Get(name);
 
             var queueList = new List<IQueueService>();
 
-            foreach (var queue in config.Subscribers)
+            foreach (var queue in queues)
             {
                 var handler = _handlers.FirstOrDefault(s => s.CanProcess(queue.ConsumerTag));
 
@@ -63,7 +69,7 @@ namespace SimpleRabbit.NetCore.Service
                     continue;
                 }
 
-                var queueService = new QueueService(config, _provider.GetService<ILogger<QueueService>>());
+                var queueService = new QueueService(rabbitconfig, _provider.GetService<ILogger<QueueService>>());
 
                 queueService.Start(queue, handler);
                 queueList.Add(queueService);
