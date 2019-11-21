@@ -5,6 +5,14 @@ namespace SimpleRabbit.NetCore
     public class QueueConfiguration
     {
         public string ExchangeName { get; set; }
+        /// <summary>
+        /// Name that will be displayed on RabbitMQ
+        /// </summary>
+        public string ConsumerName { get; set; }
+        
+        /// <summary>
+        /// Name to use to determine <see cref="IMessageHandler"/>
+        /// </summary>
         public string ConsumerTag { get; set; }
         public string QueueName { get; set; }
         public ushort? PrefetchCount { get; set; }
