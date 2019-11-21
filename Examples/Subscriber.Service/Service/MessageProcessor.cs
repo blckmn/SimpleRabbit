@@ -14,6 +14,12 @@ namespace Subscriber.Service.Service
         {
             Console.WriteLine(message.Body);
 
+            if (message.Body.Equals("exception"))
+            {
+                throw new Exception("Error");
+            }
+            
+
             // return true if you want to ack immediately. False if you want to handle the ack (e.g. dispatch to a thread - and ack later).
             return true;
         }

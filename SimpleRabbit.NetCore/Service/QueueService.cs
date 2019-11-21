@@ -3,6 +3,7 @@ using Timer = System.Timers.Timer;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Threading;
 
 namespace SimpleRabbit.NetCore
 {
@@ -15,6 +16,7 @@ namespace SimpleRabbit.NetCore
 
     public class QueueService : BasicRabbitService, IQueueService
     {
+        private const int DefaultRetryInterval = 15;
         private const int MaxRetryInterval = 120;
 
         private readonly ILogger<QueueService> _logger;
@@ -41,35 +43,6 @@ namespace SimpleRabbit.NetCore
             };
         }
 
-        private void RestartIn(TimeSpan waitInterval)
-        {
-            try
-            {
-                // attempt to stop the event consumption.
-                Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
-            }
-            catch
-            {
-                // ignored
-            }
-
-            try
-            {
-                Close();
-            }
-            catch
-            {
-                // Ignored
-            }
-
-            _retryCount++;
-            var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
-
-            _timer.Interval = interval * 1000;
-            _logger.LogInformation($" -> restarting connection in {interval} seconds ({_retryCount}).");
-            _timer.Start();
-        }
-
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
         {
             _queueServiceParams = new QueueConfiguration
@@ -77,7 +50,6 @@ namespace SimpleRabbit.NetCore
                 PrefetchCount = prefetch,
                 QueueName = queue,
                 ConsumerTag = tag,
-                RetryInterval = 30
             };
             _handler = handler;
 
@@ -87,14 +59,10 @@ namespace SimpleRabbit.NetCore
         public void Start(QueueConfiguration subscriberConfiguration, IMessageHandler handler)
         {
             _queueServiceParams = subscriberConfiguration;
-            if (_queueServiceParams.RetryInterval == 0)
-            {
-                _queueServiceParams.RetryInterval = 30;
-            }
             _handler = handler;
-
             Start();
         }
+
 
         private void Start()
         {
@@ -102,6 +70,16 @@ namespace SimpleRabbit.NetCore
             if (_handler == null)
             {
                 throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_queueServiceParams.ConsumerTag} => {_queueServiceParams.QueueName}");
+            }
+
+            if (_queueServiceParams.OnErrorAction == QueueConfiguration.ErrorAction.DropMessage)
+            {
+
+                if (string.IsNullOrWhiteSpace(_queueServiceParams.DeadLetterQueue))
+                {
+                    throw new ArgumentNullException(nameof(_queueServiceParams.DeadLetterQueue), $"no dead letter queue assigned for {_queueServiceParams.ConsumerTag} => {_queueServiceParams.QueueName}");
+                }
+                
             }
 
             try
@@ -115,9 +93,77 @@ namespace SimpleRabbit.NetCore
             catch (Exception e)
             {
                 _logger.LogError(e, $"{_queueServiceParams.QueueName} -> {e.Message}");
-                RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
+                RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval));
             }
         }
+
+        private void RestartIn(TimeSpan waitInterval)
+        {
+            try
+            {
+                // attempt to stop the event consumption.
+                Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
+            }
+            catch { }// ignored
+
+            try
+            {
+                Close();
+            }
+            catch { } //Ignored
+
+            _retryCount++;
+            var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
+
+            _timer.Interval = interval * 1000; // seconds
+            _logger.LogInformation($" -> restarting connection in {interval} seconds ({_retryCount}).");
+            _timer.Start();
+        }
+
+        private void OnError(object sender, BasicDeliverEventArgs message, bool multiple)
+        {
+            try
+            {
+                var channel = (sender as IBasicConsumer)?.Model;
+
+                switch (_queueServiceParams.OnErrorAction)
+                {
+                    case QueueConfiguration.ErrorAction.DropMessage:
+                        {
+                            channel.BasicNack(message.DeliveryTag,multiple, false);
+                            break;
+                        }
+                    case QueueConfiguration.ErrorAction.NackOnException:
+                        {
+                            RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval));
+                            break;
+                        }
+                    case QueueConfiguration.ErrorAction.RestartConnection:
+                    default:
+                        {
+                            if (channel == null || channel.IsClosed)
+                            {
+                                RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval));
+                            }
+                            else
+                            {
+                                // let all the other threads catch up so nack occurs once.
+                                Thread.Sleep((_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval) * 1000);
+
+                                channel.BasicNack(message.DeliveryTag, multiple, true);
+                            }
+                            break;
+                        }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"An error occured while trying to handle another error, restarting connection in {_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval}");
+                RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryIntervalInSeconds ?? DefaultRetryInterval));
+            }
+        }
+
+
 
         public void Stop()
         {
@@ -129,23 +175,24 @@ namespace SimpleRabbit.NetCore
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
+            
+            var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
+                    () => OnError(sender, args, false));
 
             try
             {
-                var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
-                    () => RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval)));
-
                 if (_handler.Process(message))
                 {
                     channel.BasicAck(args.DeliveryTag, false);
                 }
+                // Reset the counter on first successful process
                 _retryCount = 0;
             }
             catch (Exception ex)
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-                RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
+                message.RegisterError.Invoke();
             }
         }
 
