@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SImpleRabbit.NetCore.Publisher\SimpleRabbit.NetCore.Publisher.csproj" />
+    <ProjectReference Include="..\..\SimpleRabbit.NetCore.Publish\SimpleRabbit.NetCore.Publish.csproj" />
   </ItemGroup>
 
   <ItemGroup>
