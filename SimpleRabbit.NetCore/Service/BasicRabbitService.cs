@@ -17,6 +17,8 @@ namespace SimpleRabbit.NetCore
     {
         private const int Infinite = -1;
         private const int TimerPeriod = 10000;
+        private const int DefaultRequestedHeartBeat = 5;
+        private const int DefaultNetworkRecoveryInterval = 10;
 
         private IList<string> _hostnames;
         private ConnectionFactory _factory;
@@ -46,10 +48,10 @@ namespace SimpleRabbit.NetCore
                     UserName = _config.Username,
                     Password = _config.Password,
                     VirtualHost = string.IsNullOrWhiteSpace(_config.VirtualHost) ? ConnectionFactory.DefaultVHost : _config.VirtualHost,
-                    AutomaticRecoveryEnabled = true,
-                    NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-                    TopologyRecoveryEnabled = true,
-                    RequestedHeartbeat = 5
+                    AutomaticRecoveryEnabled = _config.AutomaticRecoveryEnabled ?? true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(_config.NetworkRecoveryIntervalInSeconds ?? DefaultNetworkRecoveryInterval),
+                    TopologyRecoveryEnabled = _config.TopologyRecoveryEnabled ?? true,
+                    RequestedHeartbeat = _config.RequestedHeartBeat ?? DefaultRequestedHeartBeat,
                 };
 
                 return _factory;
