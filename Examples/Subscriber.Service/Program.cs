@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using SimpleRabbit.NetCore;
 using SimpleRabbit.NetCore.Service;
 using Subscriber.Service.Service;
+using System;
+using System.Threading.Tasks;
 
 namespace Subscriber.Service
 {
@@ -28,7 +25,8 @@ namespace Subscriber.Service
                     {
                         var config = context.Configuration;
                         services
-                            .AddSingleton<IMessageHandler,MessageProcessor>()
+                            //.AddSubscriberHandler<MessageProcessor>()
+                            .AddAsyncSubscriberHandler<MessageProcessorAsync>()
                             .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))
                             .AddSubscriberConfiguration(config.GetSection("Subscribers"))
                             .AddSubscriberServices();

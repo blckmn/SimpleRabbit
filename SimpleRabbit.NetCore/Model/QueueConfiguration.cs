@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace SimpleRabbit.NetCore
+﻿namespace SimpleRabbit.NetCore
 {
     public class QueueConfiguration
     {
@@ -9,7 +7,7 @@ namespace SimpleRabbit.NetCore
         /// Name that will be displayed on RabbitMQ
         /// </summary>
         public string ConsumerName { get; set; }
-        
+
         /// <summary>
         /// Name to use to determine <see cref="IMessageHandler"/>
         /// </summary>
@@ -21,10 +19,6 @@ namespace SimpleRabbit.NetCore
         /// </summary>
         public int? RetryIntervalInSeconds { get; set; }
         public bool AutoBackOff { get; set; }
-        /// <summary>
-        /// Name of the queue to publish a message to.
-        /// </summary>
-        public string DeadLetterQueue { get;set;}
         public ErrorAction OnErrorAction { get; set; }
 
         public enum ErrorAction

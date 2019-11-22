@@ -1,9 +1,9 @@
-﻿using System;
+﻿using RabbitMQ.Client;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
-using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
 {
@@ -17,7 +17,7 @@ namespace SimpleRabbit.NetCore
     {
         private const int Infinite = -1;
         private const int TimerPeriod = 10000;
-        private const int DefaultRequestedHeartBeat = 5;
+        private const ushort DefaultRequestedHeartBeat = 5;
         private const int DefaultNetworkRecoveryInterval = 10;
 
         private IList<string> _hostnames;
@@ -82,12 +82,15 @@ namespace SimpleRabbit.NetCore
             }
             finally
             {
-                if (acquired) Monitor.Exit(this);
+                if (acquired)
+                {
+                    Monitor.Exit(this);
+                }
             }
         }
 
         private string ClientName =>
-            _config?.Name ?? 
+            _config?.Name ??
             Environment.GetEnvironmentVariable("COMPUTERNAME") ??
             Environment.GetEnvironmentVariable("HOSTNAME");
 
@@ -97,12 +100,12 @@ namespace SimpleRabbit.NetCore
         {
             _config = config;
 
-            _timer = new Timer(state => 
+            _timer = new Timer(state =>
                 {
                     WatchdogExecution();
-                }, 
-                this, 
-                Infinite, 
+                },
+                this,
+                Infinite,
                 TimerPeriod
             );
         }
@@ -118,7 +121,7 @@ namespace SimpleRabbit.NetCore
 
         public IBasicProperties GetBasicProperties()
         {
-            lock(this)
+            lock (this)
             {
                 return Channel.CreateBasicProperties();
             }

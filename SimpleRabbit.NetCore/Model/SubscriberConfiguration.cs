@@ -4,7 +4,7 @@ namespace SimpleRabbit.NetCore
 {
     public class SubscriberConfiguration : RabbitConfiguration
     {
-        public List<QueueConfiguration> Subscribers { get;set;}
+        public List<QueueConfiguration> Subscribers { get; set; }
 
     }
 

@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using System.Text;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace SimpleRabbit.NetCore.Service
 {
@@ -15,21 +14,23 @@ namespace SimpleRabbit.NetCore.Service
     {
         private readonly ILogger<QueueFactory> _logger;
         /// <summary>
-        /// A list of the cluster configurations.
-        /// This is a hack.
+        /// A list of the cluster configuration names. This is static and asked for only once on startup.
         /// </summary>
         private readonly List<Subscribers> _subscribers;
         private readonly IOptionsMonitor<List<QueueConfiguration>> _queueconfig;
         private readonly IOptionsMonitor<RabbitConfiguration> _rabbitconfig;
         private readonly IServiceProvider _provider;
         private readonly IEnumerable<IMessageHandler> _handlers;
-        private readonly Dictionary<string,List<IQueueService>> _queueServices = new Dictionary<string,List<IQueueService>>();
+        private readonly IEnumerable<IMessageHandlerAsync> _asyncHandlers;
+        private readonly Dictionary<string, List<IQueueService>> _queueServices = new Dictionary<string, List<IQueueService>>();
 
-        public QueueFactory(ILogger<QueueFactory> logger, 
-            IOptions<List<Subscribers>> subscribers, 
-            IOptionsMonitor<List<QueueConfiguration>> queueconfig, 
+        public QueueFactory(ILogger<QueueFactory> logger,
+            IOptions<List<Subscribers>> subscribers,
+            IOptionsMonitor<List<QueueConfiguration>> queueconfig,
             IOptionsMonitor<RabbitConfiguration> rabbitconfig,
-            IServiceProvider provider, IEnumerable<IMessageHandler> handlers)
+            IServiceProvider provider,
+            IEnumerable<IMessageHandler> handlers,
+            IEnumerable<IMessageHandlerAsync> asyncHandlers)
         {
             _logger = logger;
             _subscribers = subscribers.Value;
@@ -37,7 +38,7 @@ namespace SimpleRabbit.NetCore.Service
             _rabbitconfig = rabbitconfig;
             _provider = provider;
             _handlers = handlers;
-
+            _asyncHandlers = asyncHandlers;
             queueconfig.OnChange((config, name) =>
             {
                 //Recreate all queues (this is inefficient, should perform a check on changed configurations).
@@ -61,23 +62,40 @@ namespace SimpleRabbit.NetCore.Service
 
             foreach (var queue in queues)
             {
-                var handler = _handlers.FirstOrDefault(s => s.CanProcess(queue.ConsumerTag));
-
-                if (handler == null)
+                var queueService = CreateQueue(rabbitconfig, queue);
+                if (queueService == null)
                 {
-                    _logger.LogError($"no handler for queue {queue.QueueName}, {queue.ConsumerTag}");
                     continue;
                 }
 
-                var queueService = new QueueService(rabbitconfig, _provider.GetService<ILogger<QueueService>>());
-
-                queueService.Start(queue, handler);
+                queueService.Start();
                 queueList.Add(queueService);
                 _logger.LogInformation($"Added subscriber -> Queue:{queue.QueueName}, Tag:{queue.ConsumerTag}");
             }
 
             _queueServices.Add(name, queueList);
-           
+
+        }
+
+        private IQueueService CreateQueue(RabbitConfiguration rabbitconfig, QueueConfiguration queueConfig)
+        {
+            //priortize async over sync
+            var asynchandler = _asyncHandlers.FirstOrDefault(s => s.CanProcess(queueConfig.ConsumerTag));
+            if (asynchandler != null)
+            {
+                _logger.LogTrace($"Added async subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.ConsumerTag}");
+                return new QueueServiceAsync(_provider.GetService<ILogger<QueueServiceAsync>>(), rabbitconfig, queueConfig, asynchandler);
+            }
+
+            var handler = _handlers.FirstOrDefault(s => s.CanProcess(queueConfig.ConsumerTag));
+            if (handler != null)
+            {
+                _logger.LogTrace($"Added sync subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.ConsumerTag}");
+                return new QueueService(_provider.GetService<ILogger<QueueService>>(), rabbitconfig, queueConfig, handler);
+            }
+
+            _logger.LogError($"no handler for queue {queueConfig.QueueName}, {queueConfig.ConsumerTag}");
+            return null;
         }
 
         public void KillQueues(string name)
@@ -98,7 +116,7 @@ namespace SimpleRabbit.NetCore.Service
             foreach (var name in _subscribers)
             {
                 CreateQueues(name.Name);
-                
+
             }
             _logger.LogInformation("Hosted subscriber management service started");
 

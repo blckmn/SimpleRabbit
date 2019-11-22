@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Generic;
 
 namespace SimpleRabbit.NetCore.Service
@@ -22,8 +21,28 @@ namespace SimpleRabbit.NetCore.Service
         public static IServiceCollection AddSubscriberServices(this IServiceCollection services)
         {
             return services
-                .AddHostedService<QueueFactory>()
-                .AddTransient<IQueueService, QueueService>();
+                .AddHostedService<QueueFactory>();
+        }
+
+        /// <summary>
+        /// Add a <see cref="IMessageHandler"/> that can handle messages
+        /// </summary>
+        /// <typeparam name="T"> the implementation to add</typeparam>
+        /// <param name="services">the <see cref="IServiceCollection"/></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSubscriberHandler<T>(this IServiceCollection services) where T : class, IMessageHandler
+        {
+            return services.AddSingleton<IMessageHandler, T>();
+        }
+        /// <summary>
+        /// Add a <see cref="IMessageHandlerAsync"/> that can handle messages
+        /// </summary>
+        /// <typeparam name="T"> the implementation to add</typeparam>
+        /// <param name="services">the <see cref="IServiceCollection"/></param>
+        /// <returns></returns>
+        public static IServiceCollection AddAsyncSubscriberHandler<T>(this IServiceCollection services) where T : class, IMessageHandlerAsync
+        {
+            return services.AddSingleton<IMessageHandlerAsync, T>();
         }
 
         /// <summary>
@@ -32,12 +51,12 @@ namespace SimpleRabbit.NetCore.Service
         /// <param name="services">the <see cref="IServiceCollection"/> to configure</param>
         /// <param name="config">the configuration section to use</param>
         /// <returns>the <see cref="IServiceCollection"/></returns>
-        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services,string name, IConfigurationSection config)
+        public static IServiceCollection AddSubscriberConfiguration(this IServiceCollection services, string name, IConfigurationSection config)
         {
             // This will only be instaniated and NEVER updated
-            services.Configure<List<Subscribers>>(s=>s.Add(new Subscribers { Name = name}));
+            services.Configure<List<Subscribers>>(s => s.Add(new Subscribers { Name = name }));
 
-            return services.Configure<List<QueueConfiguration>>(name,config);
+            return services.Configure<List<QueueConfiguration>>(name, config);
         }
 
         /// <summary>

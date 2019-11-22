@@ -1,6 +1,6 @@
-﻿using System;
+﻿using RabbitMQ.Client;
+using System;
 using System.Text;
-using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
 {
@@ -32,7 +32,7 @@ namespace SimpleRabbit.NetCore
             }
 
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
-            
+
             lock (this)
             {
                 Channel.ConfirmSelect();

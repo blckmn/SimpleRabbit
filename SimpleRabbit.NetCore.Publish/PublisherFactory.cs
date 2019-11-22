@@ -13,12 +13,12 @@ namespace SimpleRabbit.NetCore.Publisher
     public class PublisherFactory : IDisposable
     {
         private readonly IOptionsMonitor<RabbitConfiguration> _optionsMonitor;
-        public ConcurrentDictionary<string,IPublishService> _publishers;
+        public ConcurrentDictionary<string, IPublishService> _publishers;
         public PublisherFactory(IOptionsMonitor<RabbitConfiguration> optionsMonitor)
         {
             _publishers = new ConcurrentDictionary<string, IPublishService>();
             _optionsMonitor = optionsMonitor;
-            _optionsMonitor.OnChange((config,name) =>
+            _optionsMonitor.OnChange((config, name) =>
             {
                 // a new one will be created when requested
                 if (_publishers.TryRemove(name, out var service))

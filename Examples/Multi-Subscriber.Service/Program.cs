@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using SimpleRabbit.NetCore;
 using SimpleRabbit.NetCore.Service;
 using Subscriber.Service.Service;
+using System;
+using System.Threading.Tasks;
 
 namespace Subscriber.Service
 {
@@ -21,18 +18,18 @@ namespace Subscriber.Service
                 var builder = new HostBuilder()
                     .ConfigureAppConfiguration((hostingContext, config) =>
                     {
-                        config.AddJsonFile("appsettings.json",false,reloadOnChange:true);
+                        config.AddJsonFile("appsettings.json", false, reloadOnChange: true);
                         hostingContext.HostingEnvironment.EnvironmentName = "Development";
                     })
                     .ConfigureServices((context, services) =>
                     {
                         var config = context.Configuration;
                         services
-                            .AddSingleton<IMessageHandler,MessageProcessor>()
-                            .AddRabbitConfiguration("name",config.GetSection("RabbitConfiguration"))
-                            .AddRabbitConfiguration("name2",config.GetSection("RabbitConfiguration2"))
-                            .AddSubscriberConfiguration("name",context.Configuration.GetSection("RabbitConfiguration:Subscribers"))
-                            .AddSubscriberConfiguration("name2",context.Configuration.GetSection("RabbitConfiguration2:Subscribers"))
+                            .AddSubscriberHandler<MessageProcessor>()
+                            .AddRabbitConfiguration("name", config.GetSection("RabbitConfiguration"))
+                            .AddRabbitConfiguration("name2", config.GetSection("RabbitConfiguration2"))
+                            .AddSubscriberConfiguration("name", context.Configuration.GetSection("RabbitConfiguration:Subscribers"))
+                            .AddSubscriberConfiguration("name2", context.Configuration.GetSection("RabbitConfiguration2:Subscribers"))
                             .AddSubscriberServices();
                     })
                     .ConfigureLogging((hostingContext, logging) =>
