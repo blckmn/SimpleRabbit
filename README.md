@@ -14,7 +14,7 @@ There are two packages on Nuget.
 
 Installing is as easy as: `dotnet add package SimpleRabbit.NetCore` or `Install-Package SimpleRabbit.NetCore` depending on your setup.
 
-# Publishing
+## Publishing
 
 [sample project](Examples/Publisher)
 
@@ -53,7 +53,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
     }
 ```
 
-# Subscribing
+## Subscribing
 
 [sample project](Examples/Subscriber.Service)
 
@@ -72,7 +72,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
                     .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))
                     .AddSubscriberConfiguration(config.GetSection("Subscribers"))
                     .AddSubscriberServices();
-                    .AddSingleton<IMessageHandler,MessageProcessor>()
+                    .AddSubscriberHandler<MessageProcessor>()
             });
 
         await builder.RunConsoleAsync();
@@ -130,6 +130,15 @@ Subscribers are a list (of queues to consume), and they are auto wired up to the
         ]
     }
 ```
+
+### Asynchronous Subscription
+
+Asynchronous subscription is similiar to sychronous.
+
+Change `IMessageHandler` to `IMessageHandlerAsync` and implement the Task based Process method.
+
+In the service injection step, change `services.AddSubscriberHandler<MessageProcessor>()` to
+`services.AddAsyncSubscriberHandler<MessageProcessor>()`
 
 ### Making use of multiple Rabbit clusters
 
