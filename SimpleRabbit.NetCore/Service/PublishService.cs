@@ -1,6 +1,7 @@
 ﻿using RabbitMQ.Client;
 using System;
 using System.Text;
+using System.Timers;
 
 namespace SimpleRabbit.NetCore
 {
@@ -12,11 +13,25 @@ namespace SimpleRabbit.NetCore
 
     public class PublishService : BasicRabbitService, IPublishService
     {
+        public const int DefaultInactivityTime = 30;
         public int InactivityPeriod { get; set; }
 
         public PublishService(RabbitConfiguration options) : base(options)
         {
-            InactivityPeriod = 30;
+            InactivityPeriod = options.InactivityPeriodInSeconds ?? DefaultInactivityTime;
+
+            _watchdogTimer = new Timer
+            {
+                AutoReset = true,
+                Interval = InactivityPeriod * 1000, // in seconds
+                Enabled = false
+            };
+
+            _watchdogTimer.Elapsed += (sender, args) => { WatchdogExecution(); };
+
+            LastWatchDogTicks = DateTime.UtcNow.Ticks;
+
+            _watchdogTimer.Start();
         }
 
         public void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "")
@@ -26,6 +41,8 @@ namespace SimpleRabbit.NetCore
 
         public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null)
         {
+            if (!_watchdogTimer.Enabled) _watchdogTimer.Start();
+
             if (string.IsNullOrWhiteSpace(exchange) && string.IsNullOrWhiteSpace(route))
             {
                 throw new Exception("Exchange (or route) must be provided.");
@@ -35,7 +52,6 @@ namespace SimpleRabbit.NetCore
 
             lock (this)
             {
-
                 Channel.ConfirmSelect();
                 Channel.BasicPublish(exchange ?? "",
                     route ?? "",
@@ -45,14 +61,52 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-        protected override void OnWatchdogExecution()
+        /// <summary>
+        /// A Timer to check for an idle connection, to ensure a connection is not held open indefinitely.
+        /// </summary>
+        /// <remarks> 
+        /// Threading in the Connection prevent Console Applications from stopping if the connection
+        /// is not closed (i.e inside a using clause or not calling close).
+        /// </remarks>
+        private readonly Timer _watchdogTimer;
+        protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
+
+        protected void WatchdogExecution()
+        {
+            var acquired = false;
+            try
+            {
+                System.Threading.Monitor.TryEnter(this, ref acquired);
+                if (!acquired)
+                {
+                    return;
+                }
+
+                OnWatchdogExecution();
+            }
+            finally
+            {
+                if (acquired)
+                {
+                    System.Threading.Monitor.Exit(this);
+                }
+            }
+        }
+
+        protected void OnWatchdogExecution()
         {
             if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-InactivityPeriod).Ticks)
             {
                 return;
             }
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
-            Close();
+            ClearConnection();
+            _watchdogTimer.Stop();
+        }
+
+        protected override void Cleanup()
+        {
+            base.Cleanup();
+            _watchdogTimer?.Dispose();
         }
     }
 }

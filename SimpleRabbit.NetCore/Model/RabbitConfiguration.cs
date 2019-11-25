@@ -38,5 +38,9 @@ namespace SimpleRabbit.NetCore
         /// Flag to indicate whether a connection recovery should also include topology (exchanges, queues, bindings) made in the connection. this is default to true
         /// </summary>
         public bool? TopologyRecoveryEnabled { get; set; }
+        /// <summary>
+        /// How long of a time before an Idle publishing connection is removed. defaults to 30
+        /// </summary>
+        public int? InactivityPeriodInSeconds { get; set; }
     }
 }

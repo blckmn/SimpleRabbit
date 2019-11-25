@@ -19,11 +19,6 @@ namespace SimpleRabbit.NetCore
         private const ushort DefaultRequestedHeartBeat = 5;
         private const int DefaultNetworkRecoveryInterval = 10;
 
-        /// <summary>
-        /// How often should the watch dog interval check for idle connections
-        /// </summary>
-        private const int WatchdogCheckInterval = 2;
-
         private IList<string> _hostnames;
         private ConnectionFactory _factory;
         protected ConnectionFactory Factory
@@ -62,36 +57,7 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-        /*
-         Timer is a small hack that if someone publishes, the connection is not held open indefinitely.
-         This is due to the threading in the Connection that prevents Console applications from stopping if
-         connection is not closed (i.e. inside a using clause or not calling close).
-        */
-        private readonly Timer _watchdogTimer;
-        protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
-        protected abstract void OnWatchdogExecution();
-
-        protected void WatchdogExecution()
-        {
-            var acquired = false;
-            try
-            {
-                Monitor.TryEnter(this, ref acquired);
-                if (!acquired)
-                {
-                    return;
-                }
-
-                OnWatchdogExecution();
-            }
-            finally
-            {
-                if (acquired)
-                {
-                    Monitor.Exit(this);
-                }
-            }
-        }
+       
 
         private string ClientName =>
             _config?.Name ??
@@ -104,33 +70,14 @@ namespace SimpleRabbit.NetCore
         {
             _config = config;
 
-            _watchdogTimer = new Timer
-            {
-                AutoReset = true,
-                Interval = WatchdogCheckInterval * 1000, // in seconds
-                Enabled = false
-            };
-
-            _watchdogTimer.Elapsed += (sender, args) => { WatchdogExecution(); };
-
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
-
-            _watchdogTimer.Start();
+            
         }
 
         private IConnection _connection;
         /// <summary>
         /// ClientName is used only for human reference from RabbitMQ UI.
         /// </summary>
-        protected IConnection Connection
-        {
-            get
-            {
-                _watchdogTimer.Start();
-                return _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
-
-            }
-        }
+        protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
 
         private IModel _channel;
         protected IModel Channel => _channel ?? (_channel = Connection.CreateModel());
@@ -141,6 +88,29 @@ namespace SimpleRabbit.NetCore
             {
                 return Channel.CreateBasicProperties();
             }
+        }
+
+        public void ClearConnection()
+        {
+            lock (this)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+                try
+                {
+                    _channel?.Dispose();
+                    _channel = null;
+                }
+                finally
+                {
+                    _connection?.Dispose();
+                    _connection = null;
+                }
+                
+            }
+           
         }
 
         public void Close()
@@ -154,21 +124,12 @@ namespace SimpleRabbit.NetCore
 
                 try
                 {
-                    try
-                    {
-                        _watchdogTimer?.Stop();
-                        _channel?.Dispose();
-                    }
-                    finally
-                    {
-                        _connection?.Dispose();
-                    }
+                    ClearConnection();
                 }
                 finally
                 {
                     _factory = null;
-                    _channel = null;
-                    _connection = null;
+                   
                 }
             }
         }
@@ -180,7 +141,13 @@ namespace SimpleRabbit.NetCore
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+
+        /// <summary>
+        /// Any additional things to clean up.
+        /// </summary>
+        protected virtual void Cleanup() { }
+
+        private void Dispose(bool disposing)
         {
             if (!disposing || _disposed)
             {
@@ -189,8 +156,8 @@ namespace SimpleRabbit.NetCore
 
             try
             {
+                Cleanup();
                 Close();
-                _watchdogTimer?.Dispose();
             }
             finally
             {

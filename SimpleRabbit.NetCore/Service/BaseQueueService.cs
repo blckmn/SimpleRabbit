@@ -104,12 +104,6 @@ namespace SimpleRabbit.NetCore
             return message;
         }
 
-
-        protected void BasicReceiveEvent(object sender, BasicDeliverEventArgs args)
-        {
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
-        }
-
         protected void ResetRetryCounter()
         {
             _retryCount = 0;
@@ -126,7 +120,7 @@ namespace SimpleRabbit.NetCore
             // This needs to be fire and forgotten, as this Task needs to be complete first before it can close the channel
             // All locks need to be released beforehand.
             //https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
-            Task.Run(() => Close());
+            Task.Run(() => ClearConnection());
             _retryCount++;
             var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MAX_RETRY_INTERVAL;
             _timer.Interval = interval * 1000; // seconds
@@ -188,21 +182,6 @@ namespace SimpleRabbit.NetCore
         public void Stop()
         {
             Close();
-        }
-
-        /// <summary>
-        /// Restart an idle connection every 5 minutes
-        /// </summary>
-        protected override void OnWatchdogExecution()
-        {
-            if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-300).Ticks)
-            {
-                return;
-            }
-
-
-            LastWatchDogTicks = DateTime.UtcNow.AddSeconds(300).Ticks;
-            RestartIn(new TimeSpan(0, 0, 10));
         }
     }
 }

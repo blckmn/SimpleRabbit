@@ -36,7 +36,6 @@ namespace SimpleRabbit.NetCore
 
         private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
         {
-            BasicReceiveEvent(sender, args);
 
             var message = PrepareMessage(sender, args);
 

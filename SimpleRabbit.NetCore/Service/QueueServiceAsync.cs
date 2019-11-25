@@ -37,7 +37,6 @@ namespace SimpleRabbit.NetCore
 
         private async Task ReceiveEvent(object sender, BasicDeliverEventArgs args)
         {
-            BasicReceiveEvent(sender, args);
 
             var message = PrepareMessage(sender, args);
 
@@ -59,6 +58,5 @@ namespace SimpleRabbit.NetCore
                 }
             }
         }
-
     }
 }
