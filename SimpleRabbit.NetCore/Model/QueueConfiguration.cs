@@ -6,12 +6,12 @@
         /// <summary>
         /// Name that will be displayed on RabbitMQ
         /// </summary>
-        public string ConsumerName { get; set; }
-
+        public string ConsumerTag { get; set; }
         /// <summary>
         /// Name to use to determine <see cref="IMessageHandler"/>
+        /// If not configured, will be replaced with ConsumerTag
         /// </summary>
-        public string ConsumerTag { get; set; }
+        public string HandlerTag { get; set; }
         public string QueueName { get; set; }
         public ushort? PrefetchCount { get; set; }
         /// <summary>

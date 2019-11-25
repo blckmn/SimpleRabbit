@@ -71,7 +71,7 @@ namespace SimpleRabbit.NetCore
             {
                 var consumer = SetUpConsumer();
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
-                Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.ConsumerName ?? _queueServiceParams.ConsumerTag, consumer);
+                Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.ConsumerTag, consumer);
             }
             catch (Exception e)
             {

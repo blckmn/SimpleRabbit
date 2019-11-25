@@ -62,6 +62,7 @@ namespace SimpleRabbit.NetCore.Service
 
             foreach (var queue in queues)
             {
+                if (queue.HandlerTag == null) queue.HandlerTag = queue.ConsumerTag;
                 var queueService = CreateQueue(rabbitconfig, queue);
                 if (queueService == null)
                 {
@@ -70,7 +71,7 @@ namespace SimpleRabbit.NetCore.Service
 
                 queueService.Start();
                 queueList.Add(queueService);
-                _logger.LogInformation($"Added subscriber -> Queue:{queue.QueueName}, Tag:{queue.ConsumerTag}");
+                _logger.LogInformation($"Added subscriber -> Queue:{queue.QueueName}, Tag:{queue.HandlerTag}");
             }
 
             _queueServices.Add(name, queueList);
@@ -80,21 +81,21 @@ namespace SimpleRabbit.NetCore.Service
         private IQueueService CreateQueue(RabbitConfiguration rabbitconfig, QueueConfiguration queueConfig)
         {
             //priortize async over sync
-            var asynchandler = _asyncHandlers.FirstOrDefault(s => s.CanProcess(queueConfig.ConsumerTag));
+            var asynchandler = _asyncHandlers.FirstOrDefault(s => s.CanProcess(queueConfig.HandlerTag));
             if (asynchandler != null)
             {
-                _logger.LogTrace($"Added async subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.ConsumerTag}");
+                _logger.LogTrace($"Added async subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.HandlerTag}");
                 return new QueueServiceAsync(_provider.GetService<ILogger<QueueServiceAsync>>(), rabbitconfig, queueConfig, asynchandler);
             }
 
-            var handler = _handlers.FirstOrDefault(s => s.CanProcess(queueConfig.ConsumerTag));
+            var handler = _handlers.FirstOrDefault(s => s.CanProcess(queueConfig.HandlerTag));
             if (handler != null)
             {
-                _logger.LogTrace($"Added sync subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.ConsumerTag}");
+                _logger.LogTrace($"Added sync subscriber -> Queue:{queueConfig.QueueName}, Tag:{queueConfig.HandlerTag}");
                 return new QueueService(_provider.GetService<ILogger<QueueService>>(), rabbitconfig, queueConfig, handler);
             }
 
-            _logger.LogError($"no handler for queue {queueConfig.QueueName}, {queueConfig.ConsumerTag}");
+            _logger.LogError($"no handler for queue {queueConfig.QueueName}, {queueConfig.HandlerTag}");
             return null;
         }
 

@@ -33,7 +33,7 @@ namespace SimpleRabbit.NetCore
         /// <summary>
         /// Determine whether this handler will handle this message
         /// </summary>
-        /// <param name="tag"> the <see cref="QueueConfiguration.ConsumerTag"/> determined by which queue a message came from</param>
+        /// <param name="tag"> the <see cref="QueueConfiguration.HandlerTag"/> determined by which queue a message came from</param>
         /// <returns>boolean true if this handler will take this message, false otherwise</returns>
         bool CanProcess(string tag);
 
@@ -57,7 +57,7 @@ namespace SimpleRabbit.NetCore
         /// <summary>
         /// Determine whether this handler will handle this message
         /// </summary>
-        /// <param name="tag"> the <see cref="QueueConfiguration.ConsumerTag"/> determined by which queue a message came from</param>
+        /// <param name="tag"> the <see cref="QueueConfiguration.HandlerTag"/> determined by which queue a message came from</param>
         /// <returns>boolean true if this handler will take this message, false otherwise</returns>
         bool CanProcess(string tag);
         /// <summary>
