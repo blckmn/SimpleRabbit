@@ -3,12 +3,13 @@ using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore
 {
     public class BasicMessage
     {
-        public BasicMessage(BasicDeliverEventArgs deliveryArgs, IModel channel, string queue, Action errorAction)
+        public BasicMessage(BasicDeliverEventArgs deliveryArgs, IModel channel, string queue, Func<Task> errorAction)
         {
             DeliveryArgs = deliveryArgs;
             Channel = channel;
@@ -22,7 +23,7 @@ namespace SimpleRabbit.NetCore
         /// <summary>
         /// Action that should be called on exception in processing a message
         /// </summary>
-        public Action ErrorAction { get; }
+        public Func<Task> ErrorAction { get; }
 
         /// <summary>
         /// The body of the message as a string

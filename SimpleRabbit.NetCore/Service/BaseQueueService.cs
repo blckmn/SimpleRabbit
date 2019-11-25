@@ -2,7 +2,7 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Threading;
+using System.Threading.Tasks;
 using Timer = System.Timers.Timer;
 
 namespace SimpleRabbit.NetCore
@@ -49,6 +49,7 @@ namespace SimpleRabbit.NetCore
             _timer = new Timer
             {
                 AutoReset = false,
+                Enabled = false,
             };
 
             _timer.Elapsed += (sender, args) =>
@@ -114,30 +115,29 @@ namespace SimpleRabbit.NetCore
             _retryCount = 0;
         }
 
-        private void RestartIn(TimeSpan waitInterval)
+        private Task RestartIn(TimeSpan waitInterval)
         {
-            try
+            if (_timer.Enabled)
             {
-                // attempt to stop the event consumption.
-                Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
+                // another message/thread/task has set the restart.
+                return Task.CompletedTask;
             }
-            catch { }// ignored
 
-            try
-            {
-                Close();
-            }
-            catch { } //Ignored
-
+            // This needs to be fire and forgotten, as this Task needs to be complete first before it can close the channel
+            // All locks need to be released beforehand.
+            //https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
+            Task.Run(() => Close());
             _retryCount++;
             var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MAX_RETRY_INTERVAL;
-
             _timer.Interval = interval * 1000; // seconds
-            _logger.LogInformation($" -> restarting connection in {interval} seconds ({_retryCount}).");
+            _logger.LogInformation($" -> restarting queue {_queueServiceParams.QueueName} connection in {interval} seconds ({_retryCount}).");
             _timer.Start();
+
+            return Task.CompletedTask;
+
         }
 
-        protected void OnError(object sender, BasicDeliverEventArgs message, bool multiple)
+        protected Task OnError(object sender, BasicDeliverEventArgs message, bool multiple)
         {
             try
             {
@@ -148,36 +148,41 @@ namespace SimpleRabbit.NetCore
                     case QueueConfiguration.ErrorAction.DropMessage:
                     {
                         channel.BasicNack(message.DeliveryTag, multiple, false);
+                        _logger.LogInformation($" -> dropped message on queue {_queueServiceParams.QueueName}");
                         break;
+
                     }
                     case QueueConfiguration.ErrorAction.NackOnException:
                     {
-                        RestartIn(TimeSpan.FromSeconds(_retryInterval));
-                        break;
-                    }
-                    case QueueConfiguration.ErrorAction.RestartConnection:
-                    default:
-                    {
                         if (channel == null || channel.IsClosed)
                         {
-                            RestartIn(TimeSpan.FromSeconds(_retryInterval));
+                            return RestartIn(TimeSpan.FromSeconds(_retryInterval));
                         }
                         else
                         {
                             // let all the other threads catch up so nack occurs once.
-                            Thread.Sleep((_queueServiceParams.RetryIntervalInSeconds ?? DEFAULT_RETRY_INTERVAL) * 1000);
-
                             channel.BasicNack(message.DeliveryTag, multiple, true);
+                            var interval = _retryInterval * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MAX_RETRY_INTERVAL;
+                            _logger.LogInformation($" -> restarting queue {_queueServiceParams.QueueName} processing in {interval} seconds ({_retryCount}).");
+                            return Task.Delay(TimeSpan.FromSeconds(interval));
+
                         }
-                        break;
+
+                    }
+                    case QueueConfiguration.ErrorAction.RestartConnection:
+                    default:
+                    {
+                        return RestartIn(TimeSpan.FromSeconds(_retryInterval));
+
                     }
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"An error occured while trying to handle another error, restarting connection");
-                RestartIn(TimeSpan.FromSeconds(_retryInterval));
+                return RestartIn(TimeSpan.FromSeconds(_retryInterval));
             }
+            return Task.CompletedTask;
         }
 
         public void Stop()
@@ -185,7 +190,9 @@ namespace SimpleRabbit.NetCore
             Close();
         }
 
-
+        /// <summary>
+        /// Restart an idle connection every 5 minutes
+        /// </summary>
         protected override void OnWatchdogExecution()
         {
             if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-300).Ticks)
@@ -193,7 +200,8 @@ namespace SimpleRabbit.NetCore
                 return;
             }
 
-            LastWatchDogTicks = DateTime.UtcNow.AddMinutes(5).Ticks;
+
+            LastWatchDogTicks = DateTime.UtcNow.AddSeconds(300).Ticks;
             RestartIn(new TimeSpan(0, 0, 10));
         }
     }

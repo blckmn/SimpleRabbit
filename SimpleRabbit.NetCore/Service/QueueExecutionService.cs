@@ -77,7 +77,7 @@ namespace SimpleRabbit.NetCore
                 }
                 catch
                 {
-                    queuedMessage.Message.ErrorAction?.Invoke();
+                    queuedMessage.Message.ErrorAction?.Invoke().GetAwaiter().GetResult();
                     lock (_semaphore)
                     {
                         _queue.Clear();

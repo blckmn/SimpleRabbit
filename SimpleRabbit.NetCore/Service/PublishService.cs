@@ -35,6 +35,7 @@ namespace SimpleRabbit.NetCore
 
             lock (this)
             {
+
                 Channel.ConfirmSelect();
                 Channel.BasicPublish(exchange ?? "",
                     route ?? "",
