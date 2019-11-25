@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Client;
+﻿using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 using System;
 using System.Text;
 using System.Timers;
@@ -16,7 +17,7 @@ namespace SimpleRabbit.NetCore
         public const int DefaultInactivityTime = 30;
         public int InactivityPeriod { get; set; }
 
-        public PublishService(RabbitConfiguration options) : base(options)
+        public PublishService(ILogger<PublishService> logger, RabbitConfiguration options) : base(options)
         {
             InactivityPeriod = options.InactivityPeriodInSeconds ?? DefaultInactivityTime;
 
@@ -30,8 +31,7 @@ namespace SimpleRabbit.NetCore
             _watchdogTimer.Elapsed += (sender, args) => { WatchdogExecution(); };
 
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
-
-            _watchdogTimer.Start();
+            _logger = logger;
         }
 
         public void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "")
@@ -69,6 +69,7 @@ namespace SimpleRabbit.NetCore
         /// is not closed (i.e inside a using clause or not calling close).
         /// </remarks>
         private readonly Timer _watchdogTimer;
+        private readonly ILogger<PublishService> _logger;
         protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
 
         protected void WatchdogExecution()
@@ -76,6 +77,7 @@ namespace SimpleRabbit.NetCore
             var acquired = false;
             try
             {
+                _logger.LogTrace("Checking Watchdog timer");
                 System.Threading.Monitor.TryEnter(this, ref acquired);
                 if (!acquired)
                 {
@@ -99,6 +101,7 @@ namespace SimpleRabbit.NetCore
             {
                 return;
             }
+            _logger.LogInformation($"Idle Rabbit Publishing Connection Detected, Clearing connection");
             ClearConnection();
             _watchdogTimer.Stop();
         }

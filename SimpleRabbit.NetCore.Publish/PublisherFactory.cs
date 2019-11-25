@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SimpleRabbit.NetCore.Publisher
 {
@@ -13,11 +15,13 @@ namespace SimpleRabbit.NetCore.Publisher
     public class PublisherFactory : IDisposable
     {
         private readonly IOptionsMonitor<RabbitConfiguration> _optionsMonitor;
+        private readonly IServiceProvider _provider;
         public ConcurrentDictionary<string, IPublishService> _publishers;
-        public PublisherFactory(IOptionsMonitor<RabbitConfiguration> optionsMonitor)
+        public PublisherFactory(IOptionsMonitor<RabbitConfiguration> optionsMonitor, IServiceProvider provider)
         {
             _publishers = new ConcurrentDictionary<string, IPublishService>();
             _optionsMonitor = optionsMonitor;
+            _provider = provider;
             _optionsMonitor.OnChange((config, name) =>
             {
                 // a new one will be created when requested
@@ -43,7 +47,7 @@ namespace SimpleRabbit.NetCore.Publisher
         private IPublishService CreatePublisher(string name)
         {
             var options = _optionsMonitor.Get(name);
-            var publisher = new PublishService(options);
+            var publisher = new PublishService(_provider.GetService<ILogger<PublishService>>(), options);
 
             return publisher;
         }

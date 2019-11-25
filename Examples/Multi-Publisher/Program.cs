@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SimpleRabbit.NetCore;
 using SimpleRabbit.NetCore.Publisher;
 using System;
@@ -17,6 +18,11 @@ namespace Publisher
             var services = new ServiceCollection();
 
             services
+                 .AddLogging(logging =>
+                 {
+                     logging.AddConfiguration(configuration.GetSection("Logging"));
+                     logging.AddConsole();
+                 })
                 .AddRabbitConfiguration("Configuration1", configuration.GetSection("RabbitConfigurations:Configuration1"))
                 .AddRabbitConfiguration("Configuration2", configuration.GetSection("RabbitConfigurations:Configuration2"))
                 .AddRabbitConfiguration("Configuration3", configuration.GetSection("RabbitConfigurations:Configuration3"))

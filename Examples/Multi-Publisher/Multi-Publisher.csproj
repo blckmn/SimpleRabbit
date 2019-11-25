@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="microsoft.extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="microsoft.extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
