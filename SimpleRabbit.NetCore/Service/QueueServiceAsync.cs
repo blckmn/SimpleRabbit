@@ -52,10 +52,7 @@ namespace SimpleRabbit.NetCore
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-                if (message?.ErrorAction != null)
-                {
-                    await Task.Run(message?.ErrorAction);
-                }
+                message?.ErrorAction?.Invoke();
             }
         }
     }

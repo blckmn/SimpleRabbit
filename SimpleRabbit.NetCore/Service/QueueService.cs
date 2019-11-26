@@ -52,12 +52,7 @@ namespace SimpleRabbit.NetCore
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
 
-
-                //TODO Investigate semantic difference between the two method calls
-                // https://stackoverflow.com/questions/41140107/task-run-vs-invoke-difference
-
-                //if (message?.ErrorAction != null) Task.Run(message?.ErrorAction).GetAwaiter().GetResult();
-                message?.ErrorAction?.Invoke().GetAwaiter().GetResult();
+                message?.ErrorAction?.Invoke();
             }
         }
 
