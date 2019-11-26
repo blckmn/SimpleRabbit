@@ -51,7 +51,6 @@ namespace SimpleRabbit.NetCore
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-
                 message?.ErrorAction?.Invoke();
             }
         }

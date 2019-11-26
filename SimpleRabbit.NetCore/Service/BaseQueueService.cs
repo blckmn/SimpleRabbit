@@ -128,9 +128,6 @@ namespace SimpleRabbit.NetCore
             _timer.Interval = interval * 1000; // seconds
             _logger.LogInformation($" -> restarting queue {_queueServiceParams.QueueName} connection in {interval} seconds ({_retryCount}).");
             _timer.Start();
-
-            return;
-
         }
 
         protected void OnError(object sender, BasicDeliverEventArgs message, bool multiple)
@@ -143,6 +140,7 @@ namespace SimpleRabbit.NetCore
                 {
                     case QueueConfiguration.ErrorAction.DropMessage:
                     {
+                        // maybe have it check whether a message is redelivered first, then drop, i.e it needs to fail a number of times.
                         channel.BasicNack(message.DeliveryTag, multiple, false);
                         _logger.LogInformation($" -> dropped message on queue {_queueServiceParams.QueueName}");
                         break;
@@ -156,13 +154,12 @@ namespace SimpleRabbit.NetCore
                         }
                         else
                         {
+                            // the particular thread is blocked.
                             // let all the other threads catch up so nack occurs once.
                             channel.BasicNack(message.DeliveryTag, multiple, true);
                             var interval = _retryInterval * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MAX_RETRY_INTERVAL;
                             _logger.LogInformation($" -> restarting queue {_queueServiceParams.QueueName} processing in {interval} seconds ({_retryCount}).");
                             Thread.Sleep(TimeSpan.FromSeconds(interval));
-                            
-
                         }
                         return;
 
@@ -172,7 +169,6 @@ namespace SimpleRabbit.NetCore
                     {
                         RestartIn(TimeSpan.FromSeconds(_retryInterval));
                         return;
-
                     }
                 }
             }

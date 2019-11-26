@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multi-Subscriber.Service", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleRabbit.NetCore.Publish", "SImpleRabbit.NetCore.Publish\SimpleRabbit.NetCore.Publish.csproj", "{FB1DF967-5993-4E06-8A2C-58815F460975}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscriber.Dispatcher.Service", "Examples\Subscriber.Dispatcher.Service\Subscriber.Dispatcher.Service.csproj", "{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{FB1DF967-5993-4E06-8A2C-58815F460975}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB1DF967-5993-4E06-8A2C-58815F460975}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB1DF967-5993-4E06-8A2C-58815F460975}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,6 +68,7 @@ Global
 		{93B7A899-A58B-410A-A1C6-D8A90A9B7856} = {AA718BB1-A244-4FAC-9A32-343DE6BFF318}
 		{33C9840B-09D8-4B0F-B1EC-444E8252ED83} = {AA718BB1-A244-4FAC-9A32-343DE6BFF318}
 		{BF4527C9-C08A-4234-8E94-A3FA0275B687} = {AA718BB1-A244-4FAC-9A32-343DE6BFF318}
+		{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46} = {AA718BB1-A244-4FAC-9A32-343DE6BFF318}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {325060B1-CB28-4224-9CD9-0DA36C124D9D}
