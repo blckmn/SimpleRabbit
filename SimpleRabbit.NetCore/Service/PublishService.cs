@@ -41,7 +41,10 @@ namespace SimpleRabbit.NetCore
 
         public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null)
         {
-            if (!_watchdogTimer.Enabled) _watchdogTimer.Start();
+            if (!_watchdogTimer.Enabled)
+            {
+                _watchdogTimer.Start();
+            }
 
             if (string.IsNullOrWhiteSpace(exchange) && string.IsNullOrWhiteSpace(route))
             {

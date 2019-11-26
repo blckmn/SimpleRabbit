@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using SimpleRabbit.NetCore.Model;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore.Service
 {
@@ -10,15 +7,15 @@ namespace SimpleRabbit.NetCore.Service
     /// Dispatcher with ordering preservation where key is not inside the payload
     /// </summary>
     /// <remarks> Still relies on ordred queue dispatching, and processing of a message wrapper</remarks>
-    public abstract class OrderedKeyDispatcher : OrderedQueueDispatcher<MessageWrapper>
+    public abstract class OrderedKeyDispatcher : OrderedDispatcher<MessageWrapper>
     {
-        protected OrderedKeyDispatcher(ILogger<OrderedKeyDispatcher> logger): base(logger)
+        protected OrderedKeyDispatcher(ILogger<OrderedKeyDispatcher> logger) : base(logger)
         {
         }
 
         protected sealed override MessageWrapper Get(BasicMessage message)
         {
-            return new MessageWrapper { BasicMessage = message };
+            return new MessageWrapper { };
         }
 
         protected abstract string GetKey(BasicMessage model);

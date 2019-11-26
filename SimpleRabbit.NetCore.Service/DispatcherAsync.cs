@@ -1,16 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore.Service
 {
-    public abstract class UnorderedDispatcherAsync : IMessageHandlerAsync
+    public abstract class DispatcherAsync : IMessageHandlerAsync
     {
-        private readonly ILogger<UnorderedDispatcherAsync> _logger;
+        private readonly ILogger<DispatcherAsync> _logger;
 
-        protected UnorderedDispatcherAsync(ILogger<UnorderedDispatcherAsync> logger)
+        protected DispatcherAsync(ILogger<DispatcherAsync> logger)
         {
             _logger = logger;
         }
@@ -30,7 +28,7 @@ namespace SimpleRabbit.NetCore.Service
         {
             try
             {
-                if(await ProcessMessage(message))
+                if (await ProcessMessage(message))
                 {
                     message.Ack();
                 }

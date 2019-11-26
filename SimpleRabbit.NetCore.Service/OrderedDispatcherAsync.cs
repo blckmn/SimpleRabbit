@@ -10,16 +10,16 @@ namespace SimpleRabbit.NetCore.Service
     /// Dispatcher with ordering preservation, with the goal to maximize throughput.
     /// </summary>
     /// <typeparam name="T"> The type of processed message to handle</typeparam>
-    public abstract class OrderedQueueDispatcher<T> : IMessageHandler where T : IDispatchModel
+    public abstract class OrderedDispatcherAsync<T> : IMessageHandlerAsync where T : IDispatchModel
     {
-        protected OrderedQueueDispatcher(ILogger<OrderedQueueDispatcher<T>> logger)
+        protected OrderedDispatcherAsync(ILogger<OrderedDispatcherAsync<T>> logger)
         {
             _logger = logger;
         }
 
         private readonly Dictionary<string, Queue<T>> _queues = new Dictionary<string, Queue<T>>();
-        private readonly object _semaphore = new object();
-        protected readonly ILogger<OrderedQueueDispatcher<T>> _logger;
+        private readonly AsyncLock _sempahore = new AsyncLock();
+        private readonly ILogger<OrderedDispatcherAsync<T>> _logger;
 
         public abstract bool CanProcess(string tag);
 
@@ -29,7 +29,7 @@ namespace SimpleRabbit.NetCore.Service
         /// <param name="message"> the basic delivered message</param>
         /// <returns></returns>
         /// <remarks></remarks>
-        protected abstract T Get(BasicMessage message);
+        protected abstract Task<T> Get(BasicMessage message);
 
         protected abstract string GetKey(T model);
 
@@ -43,26 +43,28 @@ namespace SimpleRabbit.NetCore.Service
         /// Throw an exception if this message is to be unacknowledged
         /// 
         /// </remarks>
-        protected abstract bool ProcessMessage(T model);
-
+        protected abstract Task<bool> ProcessMessage(T model);
 
         /// <summary>
         /// Recieve an Event, and queue it up
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public bool Process(BasicMessage message)
+        public async Task<bool> Process(BasicMessage message)
         {
-            var model = Get(message);
+            var model = await Get(message);
+            model.BasicMessage = message;
             var key = GetKey(model);
-            lock (_semaphore)
+            using (await _sempahore.LockAsync())
             {
-                if (!_queues.TryGetValue(key,out var queue))
+                if (!_queues.TryGetValue(key, out var queue))
                 {
                     //Start a new queue if not existing
                     queue = new Queue<T>();
                     _queues.Add(key, queue);
-                    Task.Run(() => ProcessQueue(queue, key));
+
+
+                    _ = ProcessQueue(queue, key);
                 }
 
                 queue.Enqueue(model);
@@ -73,14 +75,14 @@ namespace SimpleRabbit.NetCore.Service
             return false;
         }
 
-        private void ProcessQueue(Queue<T> queue, string key)
+        private async Task ProcessQueue(Queue<T> queue, string key)
         {
             try
             {
                 while (true)
                 {
                     T details;
-                    lock (_semaphore)
+                    using (await _sempahore.LockAsync())
                     {
                         if (queue.Count == 0)
                         {
@@ -93,11 +95,12 @@ namespace SimpleRabbit.NetCore.Service
 
                     try
                     {
-                        if (ProcessMessage(details))
+                        if (await ProcessMessage(details))
                         {
                             details.BasicMessage?.Ack();
                         }
-                        lock (_semaphore)
+
+                        using (await _sempahore.LockAsync())
                         {
                             queue.Dequeue();
                         }

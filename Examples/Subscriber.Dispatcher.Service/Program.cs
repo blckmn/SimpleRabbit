@@ -28,7 +28,7 @@ namespace Subscriber.Service
                             //.AddSubscriberHandler<MessageUnorderedProcessor>()
                             //.AddSubscriberHandler<MessageKeyProcessor>()
                             //.AddSubscriberHandler<MessageProcessor>()
-                            .AddAsyncSubscriberHandler<MessageProcessorAsync>()
+                            .AddAsyncSubscriberHandler<MessageOrderedHandlerAsync>()
                             //.AddAsyncSubscriberHandler<MessageUnorderedProcessorAsync>()
                             //.AddAsyncSubscriberHandler<MessageKeyProcessorAsync>()
                             .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))

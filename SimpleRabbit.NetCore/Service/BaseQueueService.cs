@@ -3,7 +3,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Timer = System.Timers.Timer;
 
 namespace SimpleRabbit.NetCore

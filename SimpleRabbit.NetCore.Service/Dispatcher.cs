@@ -1,16 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore.Service
 {
-    public abstract class UnorderedDispatcher : IMessageHandler
+    public abstract class Dispatcher : IMessageHandler
     {
-        private readonly ILogger<UnorderedDispatcher> _logger;
+        private readonly ILogger<Dispatcher> _logger;
 
-        protected UnorderedDispatcher(ILogger<UnorderedDispatcher> logger)
+        protected Dispatcher(ILogger<Dispatcher> logger)
         {
             _logger = logger;
         }
@@ -35,7 +33,7 @@ namespace SimpleRabbit.NetCore.Service
                 {
                     message.Ack();
                 }
-                
+
             }
             catch (Exception e)
             {

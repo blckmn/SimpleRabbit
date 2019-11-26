@@ -29,7 +29,7 @@ namespace Publisher
             for (var index = 0; index < 100; index++)
             {
                 Console.Write($"Publishing {index}: ");
-                publisher.Publish("", route:"robin-test",body: $"This is a test message - {index} - {DateTime.Now.ToLongDateString()}");
+                publisher.Publish("", route: "robin-test", body: $"This is a test message - {index} - {DateTime.Now.ToLongDateString()}");
                 Console.WriteLine("done");
             }
 

@@ -8,8 +8,8 @@
     /// The basic message will be used to perform channel operations.
     /// 
     /// </remarks>
-    public interface IDispatchModel 
+    public interface IDispatchModel
     {
-        BasicMessage BasicMessage { get; }
+        BasicMessage BasicMessage { get; set; }
     }
 }

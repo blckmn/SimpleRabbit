@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
-using System.Threading;
-using Timer = System.Timers.Timer;
 
 namespace SimpleRabbit.NetCore
 {
@@ -57,7 +55,7 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-       
+
 
         private string ClientName =>
             _config?.Name ??
@@ -70,7 +68,7 @@ namespace SimpleRabbit.NetCore
         {
             _config = config;
 
-            
+
         }
 
         private IConnection _connection;
@@ -108,9 +106,9 @@ namespace SimpleRabbit.NetCore
                     _connection?.Dispose();
                     _connection = null;
                 }
-                
+
             }
-           
+
         }
 
         public void Close()
@@ -129,7 +127,7 @@ namespace SimpleRabbit.NetCore
                 finally
                 {
                     _factory = null;
-                   
+
                 }
             }
         }

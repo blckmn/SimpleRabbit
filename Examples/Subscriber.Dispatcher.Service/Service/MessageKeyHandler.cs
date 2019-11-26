@@ -1,18 +1,15 @@
 ﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using SimpleRabbit.NetCore;
-using SimpleRabbit.NetCore.Model;
 using SimpleRabbit.NetCore.Service;
-using Subscriber.Dispatcher.Service.Models;
 using System;
 using System.Text;
 using System.Threading;
 
 namespace Subscriber.Service.Service
 {
-    public class MessageKeyProcessor : OrderedKeyDispatcher
+    public class MessageKeyHandler : OrderedKeyDispatcher
     {
-        public MessageKeyProcessor(ILogger<MessageKeyProcessor> logger) : base(logger)
+        public MessageKeyHandler(ILogger<MessageKeyHandler> logger) : base(logger)
         {
         }
 

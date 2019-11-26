@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using SimpleRabbit.NetCore.Model;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore.Service
@@ -11,16 +9,16 @@ namespace SimpleRabbit.NetCore.Service
     /// Dispatcher with ordering preservation, with the goal to maximize throughput.
     /// </summary>
     /// <typeparam name="T"> The type of processed message to handle</typeparam>
-    public abstract class OrderedQueueDispatcherAsync<T> : IMessageHandlerAsync where T : class
+    public abstract class OrderedDispatcher<T> : IMessageHandler where T : IDispatchModel
     {
-        protected OrderedQueueDispatcherAsync(ILogger<OrderedQueueDispatcherAsync<T>> logger)
+        protected OrderedDispatcher(ILogger<OrderedDispatcher<T>> logger)
         {
             _logger = logger;
         }
 
-        private readonly Dictionary<string, Queue<MessageWrapper<T>>> _queues = new Dictionary<string, Queue<MessageWrapper<T>>>();
-        private readonly AsyncLock _sempahore = new AsyncLock();
-        private readonly ILogger<OrderedQueueDispatcherAsync<T>> _logger;
+        private readonly Dictionary<string, Queue<T>> _queues = new Dictionary<string, Queue<T>>();
+        private readonly object _semaphore = new object();
+        protected readonly ILogger<OrderedDispatcher<T>> _logger;
 
         public abstract bool CanProcess(string tag);
 
@@ -30,7 +28,7 @@ namespace SimpleRabbit.NetCore.Service
         /// <param name="message"> the basic delivered message</param>
         /// <returns></returns>
         /// <remarks></remarks>
-        protected abstract Task<T> Get(BasicMessage message);
+        protected abstract T Get(BasicMessage message);
 
         protected abstract string GetKey(T model);
 
@@ -44,34 +42,30 @@ namespace SimpleRabbit.NetCore.Service
         /// Throw an exception if this message is to be unacknowledged
         /// 
         /// </remarks>
-        protected abstract Task<bool> ProcessMessage(T model);
+        protected abstract bool ProcessMessage(T model);
+
 
         /// <summary>
         /// Recieve an Event, and queue it up
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public async Task<bool> Process(BasicMessage message)
+        public bool Process(BasicMessage message)
         {
-            var model = await Get(message);
+            var model = Get(message);
+            model.BasicMessage = message;
             var key = GetKey(model);
-            using(await _sempahore.LockAsync())
+            lock (_semaphore)
             {
-                if (!_queues.TryGetValue(key,out var queue))
+                if (!_queues.TryGetValue(key, out var queue))
                 {
                     //Start a new queue if not existing
-                    queue = new Queue<MessageWrapper<T>>();
+                    queue = new Queue<T>();
                     _queues.Add(key, queue);
-
-
-                    _ = ProcessQueue(queue, key);
+                    Task.Run(() => ProcessQueue(queue, key));
                 }
 
-                queue.Enqueue(new MessageWrapper<T>
-                {
-                    Model = model,
-                    BasicMessage = message
-                });
+                queue.Enqueue(model);
 
             }
 
@@ -79,14 +73,14 @@ namespace SimpleRabbit.NetCore.Service
             return false;
         }
 
-        private async Task ProcessQueue(Queue<MessageWrapper<T>> queue, string key)
+        private void ProcessQueue(Queue<T> queue, string key)
         {
             try
             {
                 while (true)
                 {
-                    MessageWrapper<T> details;
-                    using (await _sempahore.LockAsync())
+                    T details;
+                    lock (_semaphore)
                     {
                         if (queue.Count == 0)
                         {
@@ -99,12 +93,11 @@ namespace SimpleRabbit.NetCore.Service
 
                     try
                     {
-                        if( await ProcessMessage(details.Model))
+                        if (ProcessMessage(details))
                         {
                             details.BasicMessage?.Ack();
                         }
-                        
-                        using (await _sempahore.LockAsync())
+                        lock (_semaphore)
                         {
                             queue.Dequeue();
                         }

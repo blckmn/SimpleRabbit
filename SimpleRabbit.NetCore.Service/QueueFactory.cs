@@ -62,7 +62,11 @@ namespace SimpleRabbit.NetCore.Service
 
             foreach (var queue in queues)
             {
-                if (queue.HandlerTag == null) queue.HandlerTag = queue.ConsumerTag;
+                if (queue.HandlerTag == null)
+                {
+                    queue.HandlerTag = queue.ConsumerTag;
+                }
+
                 var queueService = CreateQueue(rabbitconfig, queue);
                 if (queueService == null)
                 {
