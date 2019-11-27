@@ -14,17 +14,17 @@ namespace SimpleRabbit.NetCore
 
     public class PublishService : BasicRabbitService, IPublishService
     {
-        public const int DefaultInactivityTime = 30;
-        public int InactivityPeriod { get; set; }
+        private const int DefaultInactivityTime = 30;
+        private int _inactivityPeriod;
 
         public PublishService(ILogger<PublishService> logger, RabbitConfiguration options) : base(options)
         {
-            InactivityPeriod = options.InactivityPeriodInSeconds ?? DefaultInactivityTime;
+            _inactivityPeriod = options.InactivityPeriodInSeconds ?? DefaultInactivityTime;
 
             _watchdogTimer = new Timer
             {
                 AutoReset = true,
-                Interval = InactivityPeriod * 1000, // in seconds
+                Interval = _inactivityPeriod * 1000, // in seconds
                 Enabled = false
             };
 
@@ -75,7 +75,7 @@ namespace SimpleRabbit.NetCore
         private readonly ILogger<PublishService> _logger;
         protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
 
-        protected void WatchdogExecution()
+        private void WatchdogExecution()
         {
             var acquired = false;
             try
@@ -98,9 +98,9 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-        protected void OnWatchdogExecution()
+        protected virtual void OnWatchdogExecution()
         {
-            if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-InactivityPeriod).Ticks)
+            if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-_inactivityPeriod).Ticks)
             {
                 return;
             }

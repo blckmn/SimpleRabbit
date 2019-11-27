@@ -61,6 +61,10 @@ namespace SimpleRabbit.NetCore
 
         public virtual void Start()
         {
+            if (_queueServiceParams.ConsumerTag == null)
+            {
+                throw new ArgumentNullException(nameof(_queueServiceParams.ConsumerTag), "consumer tag cannot be null");
+            }
             StartQueue();
         }
 
