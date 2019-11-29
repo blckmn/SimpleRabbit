@@ -187,5 +187,11 @@ namespace SimpleRabbit.NetCore
         {
             Close();
         }
+
+        protected override void Cleanup()
+        {
+            base.Cleanup();
+            _timer.Dispose();
+        }
     }
 }

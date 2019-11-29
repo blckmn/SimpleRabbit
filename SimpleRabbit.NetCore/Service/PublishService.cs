@@ -15,7 +15,7 @@ namespace SimpleRabbit.NetCore
     public class PublishService : BasicRabbitService, IPublishService
     {
         private const int DefaultInactivityTime = 30;
-        private int _inactivityPeriod;
+        private readonly int _inactivityPeriod;
 
         public PublishService(ILogger<PublishService> logger, RabbitConfiguration options) : base(options)
         {

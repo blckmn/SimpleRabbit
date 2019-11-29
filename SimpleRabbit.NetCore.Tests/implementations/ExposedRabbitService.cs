@@ -1,12 +1,10 @@
 ﻿using RabbitMQ.Client;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace SimpleRabbit.NetCore.Tests.implementations
 {
 
-    public class DefaultRabbitService : BasicRabbitService
+    public class ExposedRabbitService : BasicRabbitService
     {
         public static RabbitConfiguration validConfig = new RabbitConfiguration
         {
@@ -15,7 +13,7 @@ namespace SimpleRabbit.NetCore.Tests.implementations
             Hostnames = new List<string> { "localhost" },
         };
 
-        public DefaultRabbitService(RabbitConfiguration config) : base(config)
+        public ExposedRabbitService(RabbitConfiguration config) : base(config)
         {
 
         }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using SimpleRabbit.NetCore.Model;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

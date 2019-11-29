@@ -1,5 +1,4 @@
 ﻿using SimpleRabbit.NetCore;
-using System;
 using System.Threading.Tasks;
 
 namespace Subscriber.Service.Service

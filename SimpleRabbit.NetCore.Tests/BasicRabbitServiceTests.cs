@@ -15,7 +15,7 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void SingletonAttributes()
         {
-            using var service = new DefaultRabbitService(DefaultRabbitService.validConfig);
+            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
 
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
@@ -35,7 +35,7 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void ClearConnection()
         {
-            using var service = new DefaultRabbitService(DefaultRabbitService.validConfig);
+            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
             var channel1 = service.ExposedChannel;
@@ -57,7 +57,7 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void CloseConnection()
         {
-            using var service = new DefaultRabbitService(DefaultRabbitService.validConfig);
+            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
             var channel1 = service.ExposedChannel;
@@ -78,11 +78,11 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void DefaultFactoryValues()
         {
-            using var service = new DefaultRabbitService(DefaultRabbitService.validConfig);
+            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
 
-            factory1.UserName.Should().Be(DefaultRabbitService.validConfig.Username);
-            factory1.Password.Should().Be(DefaultRabbitService.validConfig.Password);
+            factory1.UserName.Should().Be(ExposedRabbitService.validConfig.Username);
+            factory1.Password.Should().Be(ExposedRabbitService.validConfig.Password);
 
             factory1.VirtualHost.Should().Be(ConnectionFactory.DefaultVHost);
             factory1.AutomaticRecoveryEnabled.Should().BeTrue();
@@ -106,7 +106,7 @@ namespace SimpleRabbit.NetCore.Tests
                 TopologyRecoveryEnabled = false,
                 RequestedHeartBeat = 20
             };
-            using var service = new DefaultRabbitService(config);
+            using var service = new ExposedRabbitService(config);
             var factory1 = service.ExposedFactory;
 
             factory1.UserName.Should().Be(config.Username);
@@ -128,7 +128,7 @@ namespace SimpleRabbit.NetCore.Tests
                 Password = "guest",
                 Hostnames = new List<string> { "localhost" }
             };
-            var service = new DefaultRabbitService(config);
+            var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<InvalidCredentialException>();
 
         }
@@ -141,7 +141,7 @@ namespace SimpleRabbit.NetCore.Tests
                 Username = "guest",
                 Hostnames = new List<string> { "localhost" }
             };
-            var service = new DefaultRabbitService(config);
+            var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<InvalidCredentialException>();
 
         }
@@ -154,7 +154,7 @@ namespace SimpleRabbit.NetCore.Tests
                 Password = "guest",
                 Username = "guest",
             };
-            var service = new DefaultRabbitService(config);
+            var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<ArgumentNullException>();
 
         }
@@ -168,7 +168,7 @@ namespace SimpleRabbit.NetCore.Tests
                 Username = "guest",
                 Hostnames = new List<string>()
             };
-            var service = new DefaultRabbitService(config);
+            var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<ArgumentNullException>();
 
         }
