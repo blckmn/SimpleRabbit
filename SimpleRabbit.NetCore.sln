@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multi-Publisher", "Examples
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multi-Subscriber.Service", "Examples\Multi-Subscriber.Service\Multi-Subscriber.Service.csproj", "{BF4527C9-C08A-4234-8E94-A3FA0275B687}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleRabbit.NetCore.Publish", "SImpleRabbit.NetCore.Publish\SimpleRabbit.NetCore.Publish.csproj", "{FB1DF967-5993-4E06-8A2C-58815F460975}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleRabbit.NetCore.Publish", "SimpleRabbit.NetCore.Publish\SimpleRabbit.NetCore.Publish.csproj", "{FB1DF967-5993-4E06-8A2C-58815F460975}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Subscriber.Dispatcher.Service", "Examples\Subscriber.Dispatcher.Service\Subscriber.Dispatcher.Service.csproj", "{9B5A5E7F-C23A-40E8-8A64-0A9FFA12CB46}"
 EndProject
