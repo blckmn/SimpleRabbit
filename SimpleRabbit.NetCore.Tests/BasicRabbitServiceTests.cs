@@ -15,7 +15,7 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void SingletonAttributes()
         {
-            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
+            var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
 
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
@@ -26,6 +26,8 @@ namespace SimpleRabbit.NetCore.Tests
             var connection2 = service.ExposedConnection;
             var channel2 = service.ExposedChannel;
 
+            service.Dispose();
+
             factory1.Should().BeSameAs(factory2);
             connection1.Should().BeSameAs(connection2);
             channel1.Should().BeSameAs(channel2);
@@ -35,7 +37,7 @@ namespace SimpleRabbit.NetCore.Tests
         [Test]
         public void ClearConnection()
         {
-            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
+            var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
             var channel1 = service.ExposedChannel;
@@ -52,12 +54,13 @@ namespace SimpleRabbit.NetCore.Tests
             connection1.Should().NotBeSameAs(connection2);
             channel1.Should().NotBeSameAs(channel2);
 
+            service.Dispose();
         }
 
         [Test]
         public void CloseConnection()
         {
-            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
+            var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
             var connection1 = service.ExposedConnection;
             var channel1 = service.ExposedChannel;
@@ -73,12 +76,14 @@ namespace SimpleRabbit.NetCore.Tests
             factory1.Should().NotBeSameAs(factory2);
             connection1.Should().NotBeSameAs(connection2);
             channel1.Should().NotBeSameAs(channel2);
+
+            service.Dispose();
         }
 
         [Test]
         public void DefaultFactoryValues()
         {
-            using var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
+            var service = new ExposedRabbitService(ExposedRabbitService.validConfig);
             var factory1 = service.ExposedFactory;
 
             factory1.UserName.Should().Be(ExposedRabbitService.validConfig.Username);
@@ -90,6 +95,7 @@ namespace SimpleRabbit.NetCore.Tests
             factory1.TopologyRecoveryEnabled.Should().BeTrue();
             factory1.RequestedHeartbeat.Should().Be(5);
 
+            service.Dispose();
         }
 
         [Test]
@@ -106,7 +112,7 @@ namespace SimpleRabbit.NetCore.Tests
                 TopologyRecoveryEnabled = false,
                 RequestedHeartBeat = 20
             };
-            using var service = new ExposedRabbitService(config);
+            var service = new ExposedRabbitService(config);
             var factory1 = service.ExposedFactory;
 
             factory1.UserName.Should().Be(config.Username);
@@ -118,6 +124,7 @@ namespace SimpleRabbit.NetCore.Tests
             factory1.TopologyRecoveryEnabled.Should().BeFalse();
             factory1.RequestedHeartbeat.Should().Be(20);
 
+            service.Dispose();
         }
 
         [Test]
@@ -131,6 +138,7 @@ namespace SimpleRabbit.NetCore.Tests
             var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<InvalidCredentialException>();
 
+            service.Dispose();
         }
 
         [Test]
@@ -144,6 +152,7 @@ namespace SimpleRabbit.NetCore.Tests
             var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<InvalidCredentialException>();
 
+            service.Dispose();
         }
 
         [Test]
@@ -157,6 +166,7 @@ namespace SimpleRabbit.NetCore.Tests
             var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<ArgumentNullException>();
 
+            service.Dispose();
         }
 
         [Test]
@@ -171,6 +181,7 @@ namespace SimpleRabbit.NetCore.Tests
             var service = new ExposedRabbitService(config);
             service.Invoking(y => y.ExposedFactory).Should().Throw<ArgumentNullException>();
 
+            service.Dispose();
         }
     }
 
