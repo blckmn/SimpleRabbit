@@ -126,7 +126,6 @@ namespace SimpleRabbit.NetCore
 
         private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
         {
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
 
@@ -147,17 +146,6 @@ namespace SimpleRabbit.NetCore
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
                 RestartIn(TimeSpan.FromSeconds(_queueServiceParams.RetryInterval));
             }
-        }
-
-        protected override void OnWatchdogExecution()
-        {
-            if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-300).Ticks)
-            {
-                return;
-            }
-
-            LastWatchDogTicks = DateTime.UtcNow.AddMinutes(5).Ticks;
-            RestartIn(new TimeSpan(0, 0, 10));
         }
     }
 }
