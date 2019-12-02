@@ -208,3 +208,7 @@ Multiple cluster subscribing only requires additional registrations of configura
 ```
 
 Note : The names of the configuration will be used to match the list of queues and rabbit configuration together.
+
+## Local Rabbit
+
+within the [RabbitMQ server folder](RabbitMQ server) there contains a docker build of a preconfigured rabbit server, able to run the example projects.
