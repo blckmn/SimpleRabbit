@@ -109,5 +109,11 @@ namespace SimpleRabbit.NetCore
             Close();
             _watchdogTimer.Stop();
         }
+
+        protected override void Cleanup()
+        {
+            base.Cleanup();
+            _watchdogTimer?.Dispose();
+        }
     }
 }

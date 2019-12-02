@@ -118,6 +118,12 @@ namespace SimpleRabbit.NetCore
             GC.SuppressFinalize(this);
         }
 
+
+        /// <summary>
+        /// Any additional things to clean up.
+        /// </summary>
+        protected virtual void Cleanup() { }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing || _disposed)
@@ -127,6 +133,7 @@ namespace SimpleRabbit.NetCore
 
             try
             {
+                Cleanup();
                 Close();
             }
             finally
