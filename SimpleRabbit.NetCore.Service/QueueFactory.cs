@@ -43,8 +43,8 @@ namespace SimpleRabbit.NetCore.Service
                 //Recreate all queues (this is inefficient, should perform a check on changed configurations).
 
                 // Using names, as it will specify to which cluster.
-                KillQueues(name);
-                CreateQueues(name);
+                StopQueues(name);
+                StartQueues(name);
             });
         }
 
@@ -52,7 +52,7 @@ namespace SimpleRabbit.NetCore.Service
         /// Create the queues for a specific cluster/ <see cref="RabbitConfiguration"/>
         /// </summary>
         /// <param name="name">the name of the cluster as defined in Configuration</param>
-        public void CreateQueues(string name)
+        public void StartQueues(string name)
         {
             var rabbitconfig = _rabbitconfig.Get(name);
             var queues = _queueconfig.Get(name);
@@ -80,7 +80,7 @@ namespace SimpleRabbit.NetCore.Service
            
         }
 
-        public void KillQueues(string name)
+        public void StopQueues(string name)
         {
             var queues = _queueServices[name];
 
@@ -97,7 +97,7 @@ namespace SimpleRabbit.NetCore.Service
             _logger.LogInformation("Hosted subscriber management service starting");
             foreach (var name in _subscribers)
             {
-                CreateQueues(name.Name);
+                StartQueues(name.Name);
                 
             }
             _logger.LogInformation("Hosted subscriber management service started");
@@ -110,7 +110,7 @@ namespace SimpleRabbit.NetCore.Service
             _logger.LogInformation("Hosted subscriber management service stopping");
             foreach (var name in _subscribers)
             {
-                KillQueues(name.Name);
+                StopQueues(name.Name);
 
             }
             _logger.LogInformation("Hosted subscriber management service stopped");
