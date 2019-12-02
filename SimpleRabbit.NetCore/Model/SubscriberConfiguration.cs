@@ -1,13 +1,19 @@
-﻿namespace SimpleRabbit.NetCore
+﻿using System.Collections.Generic;
+
+namespace SimpleRabbit.NetCore
 {
-    public class SubscriberConfiguration
+    public class SubscriberConfiguration : RabbitConfiguration
     {
-        public string ExchangeName { get; set; }
-        public string ConsumerTag { get; set; }
-        public string QueueName { get; set; }
-        public ushort? PrefetchCount { get; set; }
-        public int RetryInterval { get; set; }
-        public bool AutoBackOff { get; set; }
-        public int HeartBeat { get; set; }
+        public List<QueueConfiguration> Subscribers { get;set;}
+
+    }
+
+    /// <summary>
+    /// Empty class, to keep a record of listed subscribers.
+    /// </summary>
+    public class Subscribers
+    {
+        public string Name { get; set; }
+
     }
 }
