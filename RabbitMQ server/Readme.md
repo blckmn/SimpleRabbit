@@ -18,6 +18,10 @@ myrabbitmq can be replaced with any name. the -d flag can be removed if you'd li
 
 the --name atribute is optional, however will be helpful in restarting the rabbit instance
 
+## Usage
+
+The rabbitmq local server can be accessed by navigating to localhost:15672 in browser with username "guest" and password "guest"
+
 ## Shutdown
 
 To stop the rabbit service, run the following

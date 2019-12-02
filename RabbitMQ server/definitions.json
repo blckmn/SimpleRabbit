@@ -22,7 +22,7 @@
   ],
   "queues": [
     {
-      "name": "example",
+      "name": "MyQueue",
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
@@ -44,7 +44,7 @@
     {
       "source": "MyExchange",
       "vhost": "/",
-      "destination": "example",
+      "destination": "MyQueue",
       "destination_type": "queue",
       "routing_key": "",
       "arguments": {}
