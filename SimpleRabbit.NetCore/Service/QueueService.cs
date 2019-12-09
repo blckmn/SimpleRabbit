@@ -1,7 +1,6 @@
 ﻿using System;
 using Timer = System.Timers.Timer;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -10,7 +9,7 @@ namespace SimpleRabbit.NetCore
     public interface IQueueService : IBasicRabbitService
     {
         void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1);
-        void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler);
+        void Start(QueueConfiguration subscriberConfiguration, IMessageHandler handler);
         void Stop();
     }
 
@@ -21,12 +20,12 @@ namespace SimpleRabbit.NetCore
         private readonly ILogger<QueueService> _logger;
 
         private readonly Timer _timer;
-        private SubscriberConfiguration _queueServiceParams;
+        private QueueConfiguration _queueServiceParams;
 
         private IMessageHandler _handler;
         private int _retryCount;
 
-        public QueueService(IOptionsSnapshot<RabbitConfiguration> options, ILogger<QueueService> logger) : base(options)
+        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options)
         {
             _logger = logger;
 
@@ -73,7 +72,7 @@ namespace SimpleRabbit.NetCore
 
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
         {
-            _queueServiceParams = new SubscriberConfiguration
+            _queueServiceParams = new QueueConfiguration
             {
                 PrefetchCount = prefetch,
                 QueueName = queue,
@@ -85,7 +84,7 @@ namespace SimpleRabbit.NetCore
             Start();
         }
 
-        public void Start(SubscriberConfiguration subscriberConfiguration, IMessageHandler handler)
+        public void Start(QueueConfiguration subscriberConfiguration, IMessageHandler handler)
         {
             _queueServiceParams = subscriberConfiguration;
             if (_queueServiceParams.RetryInterval == 0)

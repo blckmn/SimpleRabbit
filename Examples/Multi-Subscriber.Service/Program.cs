@@ -21,7 +21,7 @@ namespace Subscriber.Service
                 var builder = new HostBuilder()
                     .ConfigureAppConfiguration((hostingContext, config) =>
                     {
-                        config.AddJsonFile("appsettings.json");
+                        config.AddJsonFile("appsettings.json",false,reloadOnChange:true);
                         hostingContext.HostingEnvironment.EnvironmentName = "Development";
                     })
                     .ConfigureServices((context, services) =>
@@ -29,8 +29,10 @@ namespace Subscriber.Service
                         var config = context.Configuration;
                         services
                             .AddSingleton<IMessageHandler,MessageProcessor>()
-                            .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))
-                            .AddSubscriberConfiguration(config.GetSection("Subscribers"))
+                            .AddRabbitConfiguration("name",config.GetSection("RabbitConfiguration"))
+                            .AddRabbitConfiguration("name2",config.GetSection("RabbitConfiguration2"))
+                            .AddSubscriberConfiguration("name",context.Configuration.GetSection("RabbitConfiguration:Subscribers"))
+                            .AddSubscriberConfiguration("name2",context.Configuration.GetSection("RabbitConfiguration2:Subscribers"))
                             .AddSubscriberServices();
                     })
                     .ConfigureLogging((hostingContext, logging) =>

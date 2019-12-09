@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
 namespace SimpleRabbit.NetCore
@@ -10,7 +11,6 @@ namespace SimpleRabbit.NetCore
     {
         IBasicProperties GetBasicProperties();
         void Close();
-        string ConfigurationName { get; }
     }
 
     public abstract class BasicRabbitService : IBasicRabbitService
@@ -29,20 +29,23 @@ namespace SimpleRabbit.NetCore
                     return _factory;
                 }
 
-                var config = _config.Get(ConfigurationName);
-
-                if (config?.Uri == null)
+                if (string.IsNullOrWhiteSpace(_config.Username) || string.IsNullOrWhiteSpace(_config.Password))
                 {
-                    throw new ArgumentNullException(nameof(config.Uri), "Rabbit configuration possible not set correctly.");
+                    throw new InvalidCredentialException("Rabbit Configuration: Username or Password is missing");
                 }
 
-                _hostnames = config.Hostnames ?? (string.IsNullOrWhiteSpace(config.Uri?.Host) ? new List<string>() : new List<string> { config.Uri?.Host });
-                
+                if (_config.Hostnames == null || !_config.Hostnames.Any())
+                {
+                    throw new ArgumentNullException(nameof(_config.Hostnames), "Rabbit Configuration: No Hostnames provided");
+                }
+
+                _hostnames = _config.Hostnames;
+
                 _factory = new ConnectionFactory
                 {
-                    Uri = config.Uri,
-                    UserName = config.Username,
-                    Password = config.Password,
+                    UserName = _config.Username,
+                    Password = _config.Password,
+                    VirtualHost = string.IsNullOrWhiteSpace(_config.VirtualHost) ? ConnectionFactory.DefaultVHost : _config.VirtualHost,
                     AutomaticRecoveryEnabled = true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
                     TopologyRecoveryEnabled = true,
@@ -82,27 +85,15 @@ namespace SimpleRabbit.NetCore
         }
 
         private string ClientName =>
-            _config?.Get(ConfigurationName)?.Name ?? 
+            _config?.Name ?? 
             Environment.GetEnvironmentVariable("COMPUTERNAME") ??
             Environment.GetEnvironmentVariable("HOSTNAME");
 
-        private string _configurationName;
-        public string ConfigurationName
-        {
-            get => _configurationName;
-            set 
-            { 
-                _configurationName = value;
-                Close();
-            }
-        }
+        private readonly RabbitConfiguration _config;
 
-        private readonly IOptionsSnapshot<RabbitConfiguration> _config;
-
-        protected BasicRabbitService(IOptionsSnapshot<RabbitConfiguration> options)
+        protected BasicRabbitService(RabbitConfiguration config)
         {
-            _config = options;
-            _configurationName = Options.DefaultName;
+            _config = config;
 
             _timer = new Timer(state => 
                 {
@@ -115,6 +106,9 @@ namespace SimpleRabbit.NetCore
         }
 
         private IConnection _connection;
+        /// <summary>
+        /// ClientName is used only for human reference from RabbitMQ UI.
+        /// </summary>
         protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
 
         private IModel _channel;
@@ -132,11 +126,16 @@ namespace SimpleRabbit.NetCore
         {
             lock (this)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+
                 try
                 {
                     try
                     {
-                        _timer.Change(Infinite, Infinite);
+                        _timer?.Change(Infinite, Infinite);
                         _channel?.Dispose();
                     }
                     finally
@@ -146,13 +145,14 @@ namespace SimpleRabbit.NetCore
                 }
                 finally
                 {
+                    _factory = null;
                     _channel = null;
                     _connection = null;
-                    _factory = null;
                 }
             }
         }
 
+        private bool _disposed;
         public void Dispose()
         {
             Dispose(true);
@@ -161,9 +161,20 @@ namespace SimpleRabbit.NetCore
 
         protected virtual void Dispose(bool disposing)
         {
-            Close();
-            _timer?.Change(Infinite, Infinite);
-            _timer?.Dispose();
+            if (!disposing || _disposed)
+            {
+                return;
+            }
+
+            try
+            {
+                Close();
+                _timer?.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
 
         ~BasicRabbitService()
