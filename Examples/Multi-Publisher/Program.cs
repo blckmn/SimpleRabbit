@@ -31,7 +31,7 @@ namespace Publisher
             for (int i = 0; i < 3; i++)
             {
                 Console.WriteLine($"Publishing: {i}");
-                publisher.Publish("Example", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
+                publisher.Publish("MyExchange", body: $"This is a test message - {DateTime.Now.ToLongDateString()}");
             }
             Console.WriteLine("done");
 
