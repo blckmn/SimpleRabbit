@@ -17,8 +17,6 @@ namespace SimpleRabbit.NetCore
     {
         private const ushort DefaultRequestedHeartBeat = 5;
         private const int DefaultNetworkRecoveryInterval = 10;
-        private const int Infinite = -1;
-        private const int TimerPeriod = 10000;
 
         private IList<string> _hostnames;
         private ConnectionFactory _factory;
@@ -57,35 +55,6 @@ namespace SimpleRabbit.NetCore
                 return _factory;
             }
         }
-
-        /*
-         Timer is a small hack that if someone publishes, the connection is not held open indefinitely.
-         This is due to the threading in the Connection that prevents Console applications from stopping if
-         connection is not closed (i.e. inside a using clause or not calling close).
-        */
-        private readonly Timer _timer;
-        protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
-        protected abstract void OnWatchdogExecution();
-
-        protected void WatchdogExecution()
-        {
-            var acquired = false;
-            try
-            {
-                Monitor.TryEnter(this, ref acquired);
-                if (!acquired)
-                {
-                    return;
-                }
-
-                OnWatchdogExecution();
-            }
-            finally
-            {
-                if (acquired) Monitor.Exit(this);
-            }
-        }
-
         private string ClientName =>
             _config?.Name ?? 
             Environment.GetEnvironmentVariable("COMPUTERNAME") ??
@@ -96,15 +65,6 @@ namespace SimpleRabbit.NetCore
         protected BasicRabbitService(RabbitConfiguration config)
         {
             _config = config;
-
-            _timer = new Timer(state => 
-                {
-                    WatchdogExecution();
-                }, 
-                this, 
-                Infinite, 
-                TimerPeriod
-            );
         }
 
         private IConnection _connection;
@@ -137,7 +97,6 @@ namespace SimpleRabbit.NetCore
                 {
                     try
                     {
-                        _timer?.Change(Infinite, Infinite);
                         _channel?.Dispose();
                     }
                     finally
@@ -161,6 +120,12 @@ namespace SimpleRabbit.NetCore
             GC.SuppressFinalize(this);
         }
 
+
+        /// <summary>
+        /// Any additional things to clean up.
+        /// </summary>
+        protected virtual void Cleanup() { }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing || _disposed)
@@ -170,8 +135,8 @@ namespace SimpleRabbit.NetCore
 
             try
             {
+                Cleanup();
                 Close();
-                _timer?.Dispose();
             }
             finally
             {
