@@ -157,8 +157,8 @@ namespace SimpleRabbit.NetCore
                     case QueueConfiguration.ErrorAction.RestartConnection:
                     default:
                     {
-                       
                         RestartIn(RetryInterval);
+                        channel.BasicNack(message.DeliveryTag, false, true);
                         return;
                     }
                 }
