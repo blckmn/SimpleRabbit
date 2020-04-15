@@ -84,6 +84,28 @@ namespace SimpleRabbit.NetCore
             }
         }
 
+        public void ClearConnection()
+        {
+            lock (this)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+                try
+                {
+                    _channel?.Dispose();
+                    _channel = null;
+                }
+                finally
+                {
+                    _connection?.Dispose();
+                    _connection = null;
+                }
+
+            }
+        }
+
         public void Close()
         {
             lock (this)
@@ -95,14 +117,7 @@ namespace SimpleRabbit.NetCore
 
                 try
                 {
-                    try
-                    {
-                        _channel?.Dispose();
-                    }
-                    finally
-                    {
-                        _connection?.Dispose();
-                    }
+                    ClearConnection();
                 }
                 finally
                 {

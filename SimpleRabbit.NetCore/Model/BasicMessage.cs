@@ -13,13 +13,13 @@ namespace SimpleRabbit.NetCore
             DeliveryArgs = deliveryArgs;
             Channel = channel;
             Queue = queue;
-            RegisterError = registerError;
+            ErrorAction = registerError;
         }
 
         public BasicDeliverEventArgs DeliveryArgs { get; }
         public IModel Channel { get; }
         public string Queue { get; }
-        public Action RegisterError { get; }
+        public Action ErrorAction { get; }
 
         public string Body => Encoding.UTF8.GetString(DeliveryArgs?.Body);
         public IBasicProperties Properties => DeliveryArgs?.BasicProperties;
