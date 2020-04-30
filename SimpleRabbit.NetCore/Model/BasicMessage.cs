@@ -8,9 +8,13 @@ namespace SimpleRabbit.NetCore
 {
     public class BasicMessage
     {
+
         public BasicMessage(BasicDeliverEventArgs deliveryArgs, IModel channel, string queue, Action registerError)
         {
             DeliveryArgs = deliveryArgs;
+
+            // client 6.0 - this needs to be read immediately, and stored as it is no longer thread safe.
+            RawBody = DeliveryArgs?.Body.ToArray();
             Channel = channel;
             Queue = queue;
             ErrorAction = registerError;
@@ -21,7 +25,8 @@ namespace SimpleRabbit.NetCore
         public string Queue { get; }
         public Action ErrorAction { get; }
 
-        public string Body => Encoding.UTF8.GetString(DeliveryArgs?.Body.ToArray());
+        public byte[] RawBody { get; }
+        public string Body => Encoding.UTF8.GetString(RawBody);
         public IBasicProperties Properties => DeliveryArgs?.BasicProperties;
         public ulong DeliveryTag => DeliveryArgs?.DeliveryTag ?? 0;
         public string ConsumerTag => DeliveryArgs?.ConsumerTag;
