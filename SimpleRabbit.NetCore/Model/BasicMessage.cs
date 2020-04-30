@@ -21,7 +21,7 @@ namespace SimpleRabbit.NetCore
         public string Queue { get; }
         public Action ErrorAction { get; }
 
-        public string Body => Encoding.UTF8.GetString(DeliveryArgs?.Body);
+        public string Body => Encoding.UTF8.GetString(DeliveryArgs?.Body.ToArray());
         public IBasicProperties Properties => DeliveryArgs?.BasicProperties;
         public ulong DeliveryTag => DeliveryArgs?.DeliveryTag ?? 0;
         public string ConsumerTag => DeliveryArgs?.ConsumerTag;
