@@ -96,15 +96,15 @@ namespace SimpleRabbit.NetCore
         {
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
-
+            var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
+                    () => OnError(sender, args));
             try
             {
-                var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
-                    () => OnError(sender,args));
+                
 
                 if (_handler.Process(message))
                 {
-                    channel.BasicAck(args.DeliveryTag, false);
+                    message.Ack();
                 }
                 _retryCount = 0;
             }
@@ -112,7 +112,7 @@ namespace SimpleRabbit.NetCore
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-                RestartIn(RetryInterval);
+                message?.ErrorAction?.Invoke();
             }
         }
 
@@ -187,7 +187,8 @@ namespace SimpleRabbit.NetCore
                     //take note of blocking if clearing connection here
                     //https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
                     // attempt to stop the event consumption.
-                    Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
+                    if (Channel != null && !Channel.IsClosed)
+                        Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
                 }
                 catch
                 {
@@ -211,7 +212,11 @@ namespace SimpleRabbit.NetCore
                 {
                     foreach (var message in _toBeNackedMessages)
                     {
-                        Channel.BasicNack(message, false, false);
+                        if (Channel != null && !Channel.IsClosed)
+                        {
+                            Channel.BasicNack(message, false, true);
+                        }
+                        
                     }
                     _toBeNackedMessages.Clear();
                     return;
