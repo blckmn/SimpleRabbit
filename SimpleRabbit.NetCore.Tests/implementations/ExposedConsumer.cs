@@ -25,7 +25,8 @@ namespace SimpleRabbit.NetCore.Tests.implementations
             throw new NotImplementedException();
         }
 
-        public void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
+        public void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey,
+            IBasicProperties properties, ReadOnlyMemory<byte> body)
         {
             throw new NotImplementedException();
         }

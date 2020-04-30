@@ -93,7 +93,7 @@ namespace SimpleRabbit.NetCore.Tests
             factory1.AutomaticRecoveryEnabled.Should().BeTrue();
             factory1.NetworkRecoveryInterval.Should().Be(TimeSpan.FromSeconds(10));
             factory1.TopologyRecoveryEnabled.Should().BeTrue();
-            factory1.RequestedHeartbeat.Should().Be(5);
+            factory1.RequestedHeartbeat.Should().Be(TimeSpan.FromSeconds(5));
 
             service.Dispose();
         }
@@ -122,7 +122,7 @@ namespace SimpleRabbit.NetCore.Tests
             factory1.AutomaticRecoveryEnabled.Should().BeFalse();
             factory1.NetworkRecoveryInterval.Should().Be(TimeSpan.FromSeconds(5));
             factory1.TopologyRecoveryEnabled.Should().BeFalse();
-            factory1.RequestedHeartbeat.Should().Be(20);
+            factory1.RequestedHeartbeat.Should().Be(TimeSpan.FromSeconds(20));
 
             service.Dispose();
         }
