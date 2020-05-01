@@ -49,7 +49,7 @@ namespace SimpleRabbit.NetCore
                     AutomaticRecoveryEnabled = _config.AutomaticRecoveryEnabled ?? true,
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(_config.NetworkRecoveryIntervalInSeconds ?? DefaultNetworkRecoveryInterval),
                     TopologyRecoveryEnabled = _config.TopologyRecoveryEnabled ?? true,
-                    RequestedHeartbeat = _config.RequestedHeartBeat ?? DefaultRequestedHeartBeat,
+                    RequestedHeartbeat = TimeSpan.FromSeconds(_config.RequestedHeartBeat ?? DefaultRequestedHeartBeat),
                 };
 
                 return _factory;
