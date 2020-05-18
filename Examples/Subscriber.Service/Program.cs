@@ -28,7 +28,7 @@ namespace Subscriber.Service
                     {
                         var config = context.Configuration;
                         services
-                            .AddSingleton<IMessageHandler,MessageProcessor>()
+                            .AddTransientMessageHandler<MessageProcessor>()
                             .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))
                             .AddSubscriberConfiguration(config.GetSection("Subscribers"))
                             .AddSubscriberServices();
