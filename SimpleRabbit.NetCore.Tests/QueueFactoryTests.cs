@@ -127,9 +127,6 @@ namespace SimpleRabbit.NetCore.Tests
 
             firstHandler.Should().NotBeNull();
             secondHandler.Should().NotBeNull();
-
-            firstHandler.Should().NotBeNull();
-            secondHandler.Should().NotBeNull();
             firstHandler.Should().BeSameAs(secondHandler);
         }
     }
