@@ -64,8 +64,14 @@ namespace SimpleRabbit.NetCore
 
             LastWatchDogTicks = DateTime.UtcNow.Ticks;
             
-            lock (this)
+            if (properties == null) 
             {
+                properties = GetBasicProperties();
+            }
+            properties.MessageId ??= Guid.NewGuid().ToString("D");
+
+            lock (this)
+            {                
                 Channel.ConfirmSelect();
                 Channel.BasicPublish(exchange ?? "",
                     route ?? "",
