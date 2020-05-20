@@ -54,6 +54,31 @@ namespace SimpleRabbit.NetCore.Service
             return services.Configure<List<QueueConfiguration>>(Options.DefaultName, config);
         }
 
+        /// <summary>
+        /// Register a message handler for use with queue factory. This will register it under IMessageHandler.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddSingletonMessageHandler<T>(this IServiceCollection services) where T : class, IMessageHandler
+        {
+            services.AddSingleton<IMessageHandler, T>();
+            // don't need to register as self, as QueueFactory will use the single instance.
+            return services;
+        }
+
+        /// <summary>
+        /// Register a message handler for use with queue factory. This will register it under IMessageHandler and itself.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddTransientMessageHandler<T>(this IServiceCollection services) where T : class, IMessageHandler
+        {
+            services.AddTransient<IMessageHandler, T>();
+            services.AddTransient<T>();
+            return services;
+        }
 
     }
 }
