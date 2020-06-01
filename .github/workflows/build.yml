@@ -1,0 +1,21 @@
+name: CI - Build only
+
+on: 
+  push:
+    branches:
+    - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - if: github.ref == 'refs/heads/master' 
+      name: Run the build script
+      run: ./build/build.sh
