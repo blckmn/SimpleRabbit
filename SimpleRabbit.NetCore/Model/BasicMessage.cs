@@ -31,6 +31,7 @@ namespace SimpleRabbit.NetCore
         public ulong DeliveryTag => DeliveryArgs?.DeliveryTag ?? 0;
         public string ConsumerTag => DeliveryArgs?.ConsumerTag;
         public string MessageId => Properties?.MessageId;
+        public string CorrelationId => Properties?.CorrelationId;
         public IDictionary<string, object> Headers => Properties?.Headers;
 
         public void Ack()

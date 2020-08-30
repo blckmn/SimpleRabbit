@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Timers;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ namespace SimpleRabbit.NetCore
         /// </remarks>
         private readonly Timer _watchdogTimer;
         private readonly ILogger<PublishService> _logger;
-        protected long LastWatchDogTicks = DateTime.UtcNow.Ticks;
+        protected long lastWatchDogTicks;
 
 
         public int InactivityPeriod { get; set; }
@@ -41,7 +42,7 @@ namespace SimpleRabbit.NetCore
 
             _watchdogTimer.Elapsed += (sender, args) => { WatchdogExecution(); };
 
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
+            lastWatchDogTicks = DateTime.UtcNow.Ticks;
             _logger = logger;
         }
 
@@ -62,11 +63,15 @@ namespace SimpleRabbit.NetCore
                 throw new Exception("Exchange (or route) must be provided.");
             }
 
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
+            lastWatchDogTicks = DateTime.UtcNow.Ticks;
             
             if (properties == null) 
             {
                 properties = GetBasicProperties();
+                properties.Headers ??= new Dictionary<string, object>();
+
+                properties.Timestamp = new AmqpTimestamp((int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds);
+                properties.Headers.Add("_enqueueTime", DateTime.UtcNow.ToString("O"));
             }
             properties.MessageId ??= Guid.NewGuid().ToString("D");
 
@@ -106,12 +111,12 @@ namespace SimpleRabbit.NetCore
 
         protected void OnWatchdogExecution()
         {
-            if (LastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-InactivityPeriod).Ticks)
+            if (lastWatchDogTicks >= DateTime.UtcNow.AddSeconds(-InactivityPeriod).Ticks)
             {
                 return;
             }
             _logger.LogInformation($"Idle Rabbit Publishing Connection Detected, Clearing connection");
-            LastWatchDogTicks = DateTime.UtcNow.Ticks;
+            lastWatchDogTicks = DateTime.UtcNow.Ticks;
             Close();
             _watchdogTimer.Stop();
         }

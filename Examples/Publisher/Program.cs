@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using SimpleRabbit.NetCore;
 
 namespace Publisher
@@ -17,11 +17,12 @@ namespace Publisher
             var provider = new ServiceCollection()
                 .AddRabbitConfiguration(configuration.GetSection("RabbitConfiguration"))
                 .AddPublisherServices()
+                .AddLogging(configure => configure.AddConsole())
                 .BuildServiceProvider();
 
             var publisher = provider.GetService<IPublishService>();
 
-            for (var index = 0; index < 1000; index++)
+            for (var index = 0; index < 10; index++)
             {
                 Console.Write($"Publishing {index} : ");
                 publisher.Publish("MyExchange", body: $"This is a test message - {index} - {DateTime.Now.ToLongDateString()}");
