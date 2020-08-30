@@ -13,17 +13,17 @@ namespace SimpleRabbit.NetCore.Service
 {
     public class QueueFactory : IHostedService
     {
-        private readonly ILogger<QueueFactory> _logger;
+        protected readonly ILogger<QueueFactory> _logger;
         /// <summary>
         /// A list of the cluster configurations.
         /// This is a hack.
         /// </summary>
-        private readonly List<Subscribers> _subscribers;
-        private readonly IOptionsMonitor<List<QueueConfiguration>> _queueconfig;
-        private readonly IOptionsMonitor<RabbitConfiguration> _rabbitconfig;
-        private readonly IServiceProvider _provider;
-        private readonly IEnumerable<IMessageHandler> _handlers;
-        private readonly Dictionary<string,List<IQueueService>> _queueServices = new Dictionary<string,List<IQueueService>>();
+        protected readonly List<Subscribers> _subscribers;
+        protected readonly IOptionsMonitor<List<QueueConfiguration>> _queueconfig;
+        protected readonly IOptionsMonitor<RabbitConfiguration> _rabbitconfig;
+        protected readonly IServiceProvider _provider;
+        protected readonly IEnumerable<IMessageHandler> _handlers;
+        protected readonly Dictionary<string,List<IQueueService>> _queueServices = new Dictionary<string,List<IQueueService>>();
 
         public QueueFactory(ILogger<QueueFactory> logger, 
             IOptions<List<Subscribers>> subscribers, 
@@ -68,16 +68,34 @@ namespace SimpleRabbit.NetCore.Service
                     _logger.LogError($"no handler for queue {queue.QueueName}, {queue.ConsumerTag}");
                     continue;
                 }
+                var queueService = CreateQueue(rabbitconfig);
 
-                var queueService = new QueueService(rabbitconfig, _provider.GetService<ILogger<QueueService>>());
+                var newHandler = GetHandlerInstance(handler);
 
-                queueService.Start(queue, handler);
+                queueService.Start(queue,newHandler);
                 queueList.Add(queueService);
                 _logger.LogInformation($"Added subscriber -> Queue:{queue.QueueName}, Tag:{queue.ConsumerTag}");
             }
 
             _queueServices.Add(name, queueList);
            
+        }
+
+        private IMessageHandler GetHandlerInstance(IMessageHandler handler)
+        {
+            var newHandler = _provider.GetService(handler.GetType());
+            if( newHandler == null)
+            {
+                // no transient registration of self, assume singleton.
+                return handler;
+            }
+            return newHandler as IMessageHandler;
+        }
+
+        //default behaviour of queue service.
+        public virtual IQueueService CreateQueue(RabbitConfiguration config)
+        {
+            return new QueueService(config, _provider.GetService<ILogger<QueueService>>());
         }
 
         public void StopQueues(string name)

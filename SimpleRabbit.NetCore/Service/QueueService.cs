@@ -82,7 +82,7 @@ namespace SimpleRabbit.NetCore
                 consumer.Received += ReceiveEvent;
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
-                Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.ConsumerTag, consumer);
+                Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.DisplayName ?? _queueServiceParams.ConsumerTag, consumer);
             }
             catch (Exception e)
             {

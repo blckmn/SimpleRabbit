@@ -5,6 +5,10 @@
         public string ExchangeName { get; set; }
         public string ConsumerTag { get; set; }
         public string QueueName { get; set; }
+        /// <summary>
+        /// The name to display inside of Rabbit MQ. defauls to ConsumerTag if not specified
+        /// </summary>
+        public string DisplayName { get; set; }
         public ushort? PrefetchCount { get; set; }
         /// <summary>
         /// On error, how long it waits until reattempting to restart consuming

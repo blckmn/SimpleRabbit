@@ -72,7 +72,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
                     .AddRabbitConfiguration(config.GetSection("RabbitConfiguration"))
                     .AddSubscriberConfiguration(config.GetSection("Subscribers"))
                     .AddSubscriberServices();
-                    .AddSingleton<IMessageHandler,MessageProcessor>()
+                    .AddSingletonMessageHandler<MessageProcessor>()
             });
 
         await builder.RunConsoleAsync();
