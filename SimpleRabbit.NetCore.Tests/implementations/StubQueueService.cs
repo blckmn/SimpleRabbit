@@ -22,6 +22,11 @@ namespace SimpleRabbit.NetCore.Tests.implementations
             throw new System.NotImplementedException();
         }
 
+        public IConnection GetConnection()
+        {
+            return null;
+        }
+
         public IBasicProperties GetBasicProperties()
         {
             throw new System.NotImplementedException();

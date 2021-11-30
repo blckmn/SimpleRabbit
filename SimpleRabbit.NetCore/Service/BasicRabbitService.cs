@@ -9,6 +9,7 @@ namespace SimpleRabbit.NetCore
 {
     public interface IBasicRabbitService : IDisposable
     {
+        IConnection GetConnection();
         IBasicProperties GetBasicProperties();
         void Close();
     }
@@ -71,10 +72,15 @@ namespace SimpleRabbit.NetCore
         /// <summary>
         /// ClientName is used only for human reference from RabbitMQ UI.
         /// </summary>
-        protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
+        protected IConnection Connection => _connection ??= Factory.CreateConnection(_hostnames, ClientName);
 
         private IModel _channel;
-        protected IModel Channel => _channel ?? (_channel = Connection.CreateModel());
+        protected IModel Channel => _channel ??= Connection.CreateModel();
+
+        public IConnection GetConnection()
+        {
+            return Connection;
+        }
 
         public IBasicProperties GetBasicProperties()
         {
