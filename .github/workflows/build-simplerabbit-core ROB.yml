@@ -38,14 +38,13 @@ jobs:
       - name: Generate NuGet package
         run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
 
-
-    - name: Push generated package to GitHub registry
-      run: |
-        for f in out/*.nupkg
-        do
-          dotnet nuget push $f --source github --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
-        done
-      shell: bash
+      - name: Push generated package to GitHub registry
+        run: |
+          for f in out/*.nupkg
+          do
+            dotnet nuget push $f --source github --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
+          done
+        shell: bash
 
       #  - name: Publish to github (using curl)
       #     run: curl -vX PUT -u "${{ github.actor  }}:${{ secrets.GITHUB_TOKEN }}" -F package=@Publisher.${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
