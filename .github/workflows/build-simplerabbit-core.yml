@@ -26,7 +26,7 @@ jobs:
         run: cd ${{ env.PROJECT }}   
         
       - name: Pass Token
-        run: dotnet nuget add source --username ${{ github.event.repository.owner.name }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name sparky-github "${{ env.SOURCE_URL }}"
+        run: dotnet nuget add source --username ${{ github.actor  }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name sparky-github "${{ env.SOURCE_URL }}"
       
       - name: Build project
         run: dotnet build --configuration Release
