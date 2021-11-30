@@ -21,9 +21,6 @@ jobs:
         uses: actions/setup-dotnet@v1.5.0
         with:
           dotnet-version: 3.1.301
-          source-url: ${{ env.SOURCE_URL }}
-        env:
-          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Enter Project Directory
         run: cd ${{ env.PROJECT }}   
