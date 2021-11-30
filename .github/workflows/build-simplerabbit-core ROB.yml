@@ -39,7 +39,7 @@ jobs:
         run: dotnet pack -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
 
        - name: Publish to github (using curl)
-          run: curl -vX PUT -u "[USERNAME]:${{ secrets.GITHUB_TOKEN }}" -F package=@[PACKAGE].${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
+          run: curl -vX PUT -u "${{ github.actor  }}:${{ secrets.GITHUB_TOKEN }}" -F package=@[PACKAGE].${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
           working-directory: src/bin/Release
 
       # - name: Push generated package to GitHub registry
