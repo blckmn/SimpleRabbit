@@ -7,6 +7,7 @@
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Sparky-The-Project/SimpleRabbit.git</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Sparky-The-Project/SimpleRabbit.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
 
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
     <NeutralLanguage>en-US</NeutralLanguage>
