@@ -36,11 +36,20 @@ jobs:
         run: dotnet nuget add source --username ${{ github.actor  }} --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text --name github "${{ env.SOURCE_URL }}"
 
       - name: Generate NuGet package
-        run: dotnet pack -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
+        run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
 
-       - name: Publish to github (using curl)
-          run: curl -vX PUT -u "${{ github.actor  }}:${{ secrets.GITHUB_TOKEN }}" -F package=@Publisher.${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
-          working-directory: src/bin/Release
+
+    - name: Push generated package to GitHub registry
+      run: |
+        for f in out/*.nupkg
+        do
+          dotnet nuget push $f --source "GPR" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
+        done
+      shell: bash
+
+      #  - name: Publish to github (using curl)
+      #     run: curl -vX PUT -u "${{ github.actor  }}:${{ secrets.GITHUB_TOKEN }}" -F package=@Publisher.${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
+      #     working-directory: src/bin/Release
 
       # - name: Push generated package to GitHub registry
       #   run: dotnet nuget push ./out/*.nupkg --skip-duplicate --source "github" -k ${{secrets.GITHUB_TOKEN}}
