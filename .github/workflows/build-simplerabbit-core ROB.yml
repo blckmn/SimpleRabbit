@@ -34,7 +34,7 @@ jobs:
         run: dotnet build --configuration Release
           
       - name: Add Nuget Repo
-        run: dotnet nuget add source --username ${{ github.actor  }}--name github "${{ env.SOURCE_URL }}" # --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text 
+        run: dotnet nuget add source --username ${{ github.actor  }} --name github "${{ env.SOURCE_URL }}" # --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text 
 
       - name: Generate NuGet package
         run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
