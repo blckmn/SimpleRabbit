@@ -28,6 +28,16 @@ jobs:
 
       - name: Enter Project Directory
         run: cd ${{ env.PROJECT }}   
+        
+      - name: Pass Token
+        run: |
+          sed 's/$TOKEN/%TOKEN%/' nuget.config > nuget.config 
+          sed 's/$USERNAME/%USERNAME%/' nuget.config > nuget.config 
+          sed 's/$SOURCE/%SOURCE_URL%/' nuget.config > nuget.config 
+        env:
+          USERNAME: ${{ github.event.repository.owner.name }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_URL: ${{ env.SOURCE_URL }}
       
       - name: Build project
         run: dotnet build --configuration Release
@@ -35,10 +45,9 @@ jobs:
       - name: Generate NuGet package
         run: dotnet pack -c Release -o out
 
-      - name: Pass Token
-        run: sed 's/TOKEN/%GITHUB_TOKEN%/' > nuget.config
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Push generated package to GitHub registry
         run: dotnet nuget push ./${{ env.PROJECT }}/out/*.nupkg --skip-duplicate --no-symbols true -k ${{secrets.GITHUB_TOKEN}}  --source ${{ env.SOURCE_URL }}  
+
+        
