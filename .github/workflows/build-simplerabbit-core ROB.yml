@@ -3,7 +3,7 @@ name: NuGet Generation
 on:
   push:
     branches:
-      - master
+      - rob
 
 env:
   PROJECT: "SimpleRabbit.NetCore"
