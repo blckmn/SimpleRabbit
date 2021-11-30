@@ -9,6 +9,7 @@ env:
   PROJECT: "SimpleRabbit.NetCore"
   SOURCE_URL: "https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/"
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  GitVersion_SemVer: 3.1.1
 
 jobs:
   build-image:
