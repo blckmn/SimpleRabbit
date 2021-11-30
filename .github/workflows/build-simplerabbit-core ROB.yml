@@ -34,7 +34,7 @@ jobs:
         run: dotnet nuget add source --name github "${{ env.SOURCE_URL }}"
 
       - name: Generate NuGet package
-        run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
+        run: dotnet pack -o out -c Release -p:PackageVersion=${{ github.run_number }}
 
       - name: Push generated package to GitHub registry
         run: |
