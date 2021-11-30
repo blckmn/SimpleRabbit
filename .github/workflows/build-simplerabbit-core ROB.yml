@@ -43,7 +43,7 @@ jobs:
       run: |
         for f in out/*.nupkg
         do
-          dotnet nuget push $f --source "GPR" --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
+          dotnet nuget push $f --source github --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
         done
       shell: bash
 
