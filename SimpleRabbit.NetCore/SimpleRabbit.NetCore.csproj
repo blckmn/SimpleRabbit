@@ -11,6 +11,9 @@
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>SimpleRabbit.NetCore</Title>
+    <VersionPrefix>1.1.1</VersionPrefix>
+    <VersionSuffix>$(VersionSuffix)</VersionSuffix>
+    <PackageDescription>Hi</PackageDescription>
     <PackageId>SimpleRabbit.NetCore</PackageId>
     <PackageTags>RabbitMq Publish</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
