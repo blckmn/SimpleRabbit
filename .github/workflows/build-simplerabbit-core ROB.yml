@@ -1,0 +1,43 @@
+name: NuGet Generation
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT: "SimpleRabbit.NetCore"
+  SOURCE_URL: "https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/"
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core @ Latest
+        uses: actions/setup-dotnet@v1.5.0
+        with:
+          dotnet-version: 3.1.301
+
+      - name: Enter Project Directory
+        run: cd ${{ env.PROJECT }}   
+        
+      - name: Restore project
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --configuration Release
+          
+      # - name: Add Nuget Repo
+      #   run: dotnet nuget add source --username ${{ github.actor  }} --password  --store-password-in-clear-text --name github "${{ env.SOURCE_URL }}"
+
+      - name: Generate NuGet package
+        run: dotnet pack -c Release -o out
+
+      - name: Push generated package to GitHub registry
+        run: dotnet nuget push ./out/*.nupkg --skip-duplicate #-k ${{secrets.GITHUB_TOKEN}} --source "github"
+
+        
