@@ -36,7 +36,7 @@ jobs:
         run: dotnet pack -c Release -o out
 
       - name: Pass Token
-        run: sed 's/TOKEN/%GITHUB_TOKEN%/'  ./nuget.config
+        run: sed 's/TOKEN/%GITHUB_TOKEN%/' > nuget.config
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
