@@ -9,6 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: "${{ github.event.repository.owner.name }}/${{ github.event.repository.name }}/{{SERVICE}}"
   PROJECT: "SimpleRabbit.NetCore"
+  SOURCE_URL: "https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/index.json"
 
 jobs:
   build-image:
@@ -21,15 +22,23 @@ jobs:
       - name: Setup .NET Core @ Latest
         uses: actions/setup-dotnet@v1
         with:
-          source-url: https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/index.json
+          source-url: ${{ env.SOURCE_URL }}
         env:
-          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}        
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}     
+
+      - name: Enter Project Directory
+        run: cd ${{ env.PROJECT }}   
+      
+      - name: Build project
+        run: dotnet build --configuration Release
           
-      - name: Build solution and generate NuGet package
-        run: |  
-          cd ${{ env.PROJECT }}
-          dotnet build --configuration Release
-          dotnet pack -c Release -o out  
+      - name: Generate NuGet package
+        run: dotnet pack -c Release -o out
+
+      - name: Pass Token
+        run: sed 's/TOKEN/%GITHUB_TOKEN%/'  ./nuget.config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push generated package to GitHub registry
-        run: dotnet nuget push ./${{ env.PROJECT }}/out/*.nupkg --skip-duplicate --no-symbols true -k ${{secrets.GITHUB_TOKEN}}  --source "github"  
+        run: dotnet nuget push ./${{ env.PROJECT }}/out/*.nupkg --skip-duplicate --no-symbols true -apikey ${{secrets.GITHUB_TOKEN}}  --source ${{ env.SOURCE_URL }}  
