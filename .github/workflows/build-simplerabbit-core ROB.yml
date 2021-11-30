@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT: "SimpleRabbit.NetCore"
-  SOURCE_URL: "https://nuget.pkg.github.com/${{ github.actor  }}/index.json"
+  SOURCE_URL: "https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/index.json"
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   GitVersion_SemVer: 3.1.1
 
@@ -34,7 +34,7 @@ jobs:
         run: dotnet build --configuration Release
           
       - name: Add Nuget Repo
-        run: dotnet nuget add source --username ${{ github.actor  }} --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text --name github "${{ env.SOURCE_URL }}"
+        run: dotnet nuget add source --name github "${{ env.SOURCE_URL }}" # --username ${{ github.actor  }} --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text 
 
       - name: Generate NuGet package
         run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
