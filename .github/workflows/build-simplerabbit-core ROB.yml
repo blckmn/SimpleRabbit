@@ -8,7 +8,6 @@ on:
 env:
   PROJECT: "SimpleRabbit.NetCore"
   SOURCE_URL: "https://nuget.pkg.github.com/${{ github.event.repository.owner.name }}/index.json"
-  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
   GitVersion_SemVer: 3.1.1
 
 jobs:
@@ -23,25 +22,19 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup .NET Core @ Latest
-        uses: actions/setup-dotnet@v1.5.0
-        with:
-          dotnet-version: 3.1.301 
+        uses: actions/setup-dotnet@v1
         
       - name: Restore project
         run: dotnet restore
-        working-directory: ${{ env.PROJECT }}
 
       - name: Build project
         run: dotnet build --configuration Release
-        working-directory: ${{ env.PROJECT }}
           
       - name: Add Nuget Repo
-        run: dotnet nuget add source --name github "${{ env.SOURCE_URL }}" #  --username ${{ github.actor  }} --password ${{secrets.GITHUB_TOKEN}}  --store-password-in-clear-text 
-        working-directory: ${{ env.PROJECT }}
+        run: dotnet nuget add source --name github "${{ env.SOURCE_URL }}"
 
       - name: Generate NuGet package
         run: dotnet pack -o out -c Release -p:PackageVersion=${{ env.GitVersion_SemVer}}
-        working-directory: ${{ env.PROJECT }}
 
       - name: Push generated package to GitHub registry
         run: |
@@ -50,13 +43,5 @@ jobs:
             dotnet nuget push $f --source github --skip-duplicate --api-key ${{ secrets.GITHUB_TOKEN }}
           done
         shell: bash
-        working-directory: ${{ env.PROJECT }}
-
-      #  - name: Publish to github (using curl)
-      #     run: curl -vX PUT -u "${{ github.actor  }}:${{ secrets.GITHUB_TOKEN }}" -F package=@Publisher.${{ env.GitVersion_SemVer}}.nupkg ${{ env.SOURCE_URL }}
-      #     working-directory: src/bin/Release
-
-      # - name: Push generated package to GitHub registry
-      #   run: dotnet nuget push ./out/*.nupkg --skip-duplicate --source "github" -k ${{secrets.GITHUB_TOKEN}}
 
         
