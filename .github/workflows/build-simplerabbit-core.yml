@@ -30,14 +30,7 @@ jobs:
         run: cd ${{ env.PROJECT }}   
         
       - name: Pass Token
-        run: |
-          sed 's/$TOKEN/%TOKEN%/' nuget.config > nuget.config 
-          sed 's/$USERNAME/%USERNAME%/' nuget.config > nuget.config 
-          sed 's/$SOURCE/%SOURCE_URL%/' nuget.config > nuget.config 
-        env:
-          USERNAME: ${{ github.event.repository.owner.name }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SOURCE_URL: ${{ env.SOURCE_URL }}
+        run: dotnet nuget add source --username ${{ github.event.repository.owner.name }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "${{ env.SOURCE_URL }}"
       
       - name: Build project
         run: dotnet build --configuration Release
