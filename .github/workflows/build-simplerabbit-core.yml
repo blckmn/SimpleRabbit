@@ -41,4 +41,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push generated package to GitHub registry
-        run: dotnet nuget push ./${{ env.PROJECT }}/out/*.nupkg --skip-duplicate --no-symbols true -apikey ${{secrets.GITHUB_TOKEN}}  --source ${{ env.SOURCE_URL }}  
+        run: dotnet nuget push ./${{ env.PROJECT }}/out/*.nupkg --skip-duplicate --no-symbols true -k ${{secrets.GITHUB_TOKEN}}  --source ${{ env.SOURCE_URL }}  
