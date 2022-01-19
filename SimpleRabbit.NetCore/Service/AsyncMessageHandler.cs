@@ -109,7 +109,7 @@ namespace SimpleRabbit.NetCore
 
                 try
                 {
-                    await Process(item);
+                    await ProcessAsync(item);
                     message.Ack();
                 }
                 catch (Exception e)
