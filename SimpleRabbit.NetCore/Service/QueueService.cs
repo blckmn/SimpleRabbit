@@ -3,7 +3,6 @@ using Timer = System.Timers.Timer;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 namespace SimpleRabbit.NetCore
@@ -96,8 +95,7 @@ namespace SimpleRabbit.NetCore
         {
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
-            var message = new BasicMessage(args, channel, _queueServiceParams.QueueName,
-                    () => OnError(sender, args));
+            var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try
             {
                 
@@ -112,7 +110,7 @@ namespace SimpleRabbit.NetCore
             {
                 // error processing message
                 _logger.LogError(ex, $"{ex.Message} -> {args.DeliveryTag}: {args.BasicProperties.MessageId}");
-                message?.ErrorAction?.Invoke();
+                message.ErrorAction?.Invoke();
             }
         }
 
@@ -121,6 +119,12 @@ namespace SimpleRabbit.NetCore
             try
             {
                 var channel = (sender as IBasicConsumer)?.Model;
+                if (channel == null)
+                {
+                    _logger.LogWarning($"Channel null, in OnError -> {_queueServiceParams.QueueName}");
+                    RestartIn(RetryInterval);
+                    return;
+                }
 
                 switch (_queueServiceParams.OnErrorAction)
                 {
@@ -142,7 +146,7 @@ namespace SimpleRabbit.NetCore
                     }
                     case QueueConfiguration.ErrorAction.NackOnException:
                     {
-                        if (channel == null || channel.IsClosed)
+                        if (channel.IsClosed)
                         {
                             RestartIn(RetryInterval);
                         }
@@ -165,9 +169,8 @@ namespace SimpleRabbit.NetCore
             }
             catch (Exception e)
             {
-                _logger.LogError(e, $"An error occured while trying to handle another error, restarting connection");
+                _logger.LogError(e, $"An error occurred while trying to handle another error, restarting connection -> {e.Message}");
                 RestartIn(RetryInterval);
-                return;
             }
         }
 
