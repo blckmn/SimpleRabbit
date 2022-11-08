@@ -1,9 +1,8 @@
 name: CI - Build and deploy (release to nuget)
 
-on: 
-  push:
-    branches:
-    - release
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -16,8 +15,7 @@ jobs:
       with:
         dotnet-version: '3.1.x'
 
-    - if: github.ref == 'refs/heads/release' 
-      name: Run the build and deploy script
+    - name: Run the build and deploy script
       run: ./build/build.sh deploy
       env:
         NUGET_AUTH_TOKEN: ${{secrets.NUGET_AUTH_TOKEN}}
