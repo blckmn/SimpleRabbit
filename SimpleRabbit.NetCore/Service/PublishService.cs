@@ -9,8 +9,8 @@ namespace SimpleRabbit.NetCore
 {
     public interface IPublishService : IBasicRabbitService
     {
-        void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "");
-        void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null);
+        void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "", TimeSpan? timeout = null);
+        void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null, TimeSpan? timeout = null);
     }
 
     public class PublishService : BasicRabbitService, IPublishService
@@ -46,12 +46,12 @@ namespace SimpleRabbit.NetCore
             _logger = logger;
         }
 
-        public void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "")
+        public void ToExchange(string exchange, string body, IBasicProperties properties = null, string route = "", TimeSpan? timeout = null)
         {
-            Publish(exchange, route, properties, body);
+            Publish(exchange, route, properties, body, timeout);
         }
 
-        public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null)
+        public void Publish(string exchange = "", string route = "", IBasicProperties properties = null, string body = null, TimeSpan? timeout = null)
         {
             if (!_watchdogTimer.Enabled)
             {
@@ -82,7 +82,10 @@ namespace SimpleRabbit.NetCore
                     route ?? "",
                     properties,
                     Encoding.UTF8.GetBytes(body ?? ""));
-                Channel.WaitForConfirmsOrDie();
+                if (timeout != null)
+                    Channel.WaitForConfirmsOrDie(timeout.Value);
+                else
+                    Channel.WaitForConfirmsOrDie();
             }
         }
 
