@@ -1,9 +1,10 @@
 name: CI - Build only
 
 on: 
-  push:
+  pull_request:
     branches:
-    - master
+      - main
+      - master
 
 jobs:
   build:
@@ -16,6 +17,5 @@ jobs:
       with:
         dotnet-version: '3.1.x'
 
-    - if: github.ref == 'refs/heads/master' 
-      name: Run the build script
+    - name: Run the build script
       run: ./build/build.sh
