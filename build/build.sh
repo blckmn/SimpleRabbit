@@ -14,7 +14,7 @@ buildnumber=${GITHUB_RUN_NUMBER:=1}
 version="${major}.${minor}.${buildnumber}"
 
 if [ "${1}" == "deploy" ]; then
-version=${GITHUB_REF}
+version=${GITHUB_REF_NAME}
 fi
 
 export VERSION=${version}
