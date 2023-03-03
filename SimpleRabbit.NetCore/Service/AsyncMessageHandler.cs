@@ -16,6 +16,7 @@ namespace SimpleRabbit.NetCore
         private readonly ILogger<AsyncMessageHandler<TKey, TValue>> _logger;
 
         private readonly Dictionary<TKey, Task> _tasks;
+        private readonly object _lock = new object();
 
         protected AsyncMessageHandler(ILogger<AsyncMessageHandler<TKey, TValue>> logger)
         {
@@ -43,8 +44,6 @@ namespace SimpleRabbit.NetCore
         /// <returns></returns>
         public bool Process(BasicMessage message)
         {
-            CleanUpTasks();
-
             try
             {
                 var item = Get(message);
@@ -57,14 +56,20 @@ namespace SimpleRabbit.NetCore
                     return true;
                 }
 
-                if (!_tasks.TryGetValue(key, out var task))
+                // Enforce thread safety when manipulating the dictionary of running tasks
+                lock (_lock)
                 {
-                    task = Task.CompletedTask;
+                    CleanUpTasks();
+
+                    if (!_tasks.TryGetValue(key, out var task))
+                    {
+                        task = Task.CompletedTask;
+                    }
+
+                    // save the task at the end of the queues.
+                    var tailTask = ContinueTaskQueue(task, message, key, item);
+                    _tasks[key] = tailTask; // add completed task to the to be used.
                 }
-                
-                // save the task at the end of the queues.
-                var tailTask = ContinueTaskQueue(task, message, key, item);
-                _tasks[key] = tailTask; // add completed task to the to be used.
                 return false;
             }
             catch (Exception e)
@@ -90,7 +95,10 @@ namespace SimpleRabbit.NetCore
 
         private void CleanUpTasks()
         {
-            var completed = _tasks.Where(t => t.Value?.IsCompleted ?? true).Select(t => t.Key);
+            var completed = _tasks
+                .Where(t => t.Value?.IsCompleted ?? true)
+                .Select(t => t.Key)
+                .ToArray();
             foreach (var key in completed)
             {
                 _tasks.Remove(key);
@@ -122,7 +130,7 @@ namespace SimpleRabbit.NetCore
                             _logger.LogError(ex, ex.Message);
                         }
                     }
-                
+
                     message.ErrorAction();
                     throw;
                 }
