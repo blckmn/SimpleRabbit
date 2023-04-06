@@ -99,7 +99,8 @@ namespace SimpleRabbit.NetCore
             try
             {
                 
-
+                // TODO: look into playing around with the response from IMessageHandler.Process - potentially
+                // extend to support more responses than just bool (e.g. ack, nack, nack requeue etc.)
                 if (_handler.Process(message))
                 {
                     message.Ack();
