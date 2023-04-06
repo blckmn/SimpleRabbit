@@ -11,9 +11,17 @@ a grouping of related functionality encapsulated behind a well-defined interface
         Component(basicRabbitService, "BasicRabbitService", "Class", "Wrapper over the Rabbit connection factory. Provides the basics to interact with a rabbit instance")
         Component(publishService, "PublishService", "Class", "Enables message publishing to exchanges")
         Component(queueService, "QueueService", "Class", "Enables queue subscriptions and the handling of messages")
+        Component(asyncMessageHandler, "AsyncMessageHandler", "Class", "Enables async message processing via a queue of process tasks")
         
         Rel(publishService, basicRabbitService, "Extends")
         Rel(queueService, basicRabbitService, "Extends")
+        Rel(asyncMessageHandler, iMessageHandler, "Implements")
+    }
+
+    Container_Boundary(simpleRabbitPublish, "SimpleRabbit.NetCore.Publish", "Provides a Publishing factory that can be used to have multiple rabbit configurations") {
+        Component(publisherFactory, "PublisherFactory", "Class", "Factory to handle IPublishService instances for each rabbit configuration")
+
+        Rel(publisherFactory, publishService, "Uses")
     }
 
 ```
