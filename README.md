@@ -179,7 +179,7 @@ Subscribers are a list (of queues to consume), and they are auto wired up to the
     }
 ```
 
-### Making use of multiple Rabbit clusters
+### Multiple Rabbit clusters
 
 [Multi-Publishing](Examples/Multi-Publisher)
 [Multi-Subscribing](Examples/Multi-Subscriber.Service)

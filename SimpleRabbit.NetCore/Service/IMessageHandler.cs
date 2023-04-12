@@ -16,7 +16,7 @@
     ///         return true;
     ///     }
     /// 
-    ///     public bool Process(BasicMessage message)
+    ///     public Acknowledgement Process(BasicMessage message)
     ///     {
     ///         Console.WriteLine(message.Body);
     ///         return true;
@@ -45,6 +45,27 @@
         /// false allows for delegation of the acknowledgement, either by dispatching to a thread or acknowledging later.
         /// </para>
         /// </remarks>
-        bool Process(BasicMessage message);
+        Acknowledgement Process(BasicMessage message);
+    }
+
+    /// <summary>
+    /// Configurable options for acknowledging messages
+    /// </summary>
+    public enum Acknowledgement 
+    {
+        /// <summary>
+        /// Acknowledge the message
+        /// </summary>
+        Ack = 1,
+
+        /// <summary>
+        /// Do not acknowledge the message; requeue it on original queue
+        /// </summary>
+        NackRequeue = 2,
+
+        /// <summary>
+        /// Do not acknowledge the message; send it to dead letter queue
+        /// </summary>
+        NackDeadLetter = 3
     }
 }

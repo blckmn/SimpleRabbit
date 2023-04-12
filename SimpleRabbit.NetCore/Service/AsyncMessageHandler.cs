@@ -118,6 +118,7 @@ namespace SimpleRabbit.NetCore
                 try
                 {
                     await ProcessAsync(item);
+                    // TODO: implement nack with false requeue
                     message.Ack();
                 }
                 catch (Exception e)
