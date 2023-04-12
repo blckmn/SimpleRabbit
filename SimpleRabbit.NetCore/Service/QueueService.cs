@@ -99,21 +99,7 @@ namespace SimpleRabbit.NetCore
             try
             {
                 var acknowledgement = _handler.Process(message);
-                switch (acknowledgement) 
-                {
-                    case Acknowledgement.Ack:
-                        message.Ack();
-                        break;
-                    case Acknowledgement.NackRequeue:
-                        message.Nack(true);
-                        break;
-                    case Acknowledgement.NackDeadLetter:
-                        message.Nack(false);
-                        break;
-                    case Acknowledgement.Ignore:
-                        break;
-                }
-
+                message.HandleAck(acknowledgement);
                 _retryCount = 0;
             }
             catch (Exception ex)

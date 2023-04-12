@@ -7,24 +7,24 @@ using Microsoft.Extensions.Logging;
 namespace SimpleRabbit.NetCore
 {
     /// <summary>
-    ///     A task queue based ordered dispatcher
+    /// A task queue based ordered dispatcher. Retrieves messages in batch synchronously, and handles them in parallel. Level of parallism is dependent on the prefetch setting in Rabbit.
     /// </summary>
     /// <typeparam name="TKey">The key to use for ordering</typeparam>
     /// <typeparam name="TValue">The value to work on</typeparam>
-    public abstract class AsyncMessageHandler<TKey, TValue> : IMessageHandler
+    public abstract class ParallelMessageHandler<TKey, TValue> : IMessageHandler
     {
-        private readonly ILogger<AsyncMessageHandler<TKey, TValue>> _logger;
+        private readonly ILogger<ParallelMessageHandler<TKey, TValue>> _logger;
 
         private readonly Dictionary<TKey, Task> _tasks;
         private readonly object _lock = new object();
 
-        protected AsyncMessageHandler(ILogger<AsyncMessageHandler<TKey, TValue>> logger)
+        protected ParallelMessageHandler(ILogger<ParallelMessageHandler<TKey, TValue>> logger)
         {
             _logger = logger;
             _tasks = new Dictionary<TKey, Task>();
         }
 
-        protected AsyncMessageHandler(ILogger<AsyncMessageHandler<TKey, TValue>> logger,
+        protected ParallelMessageHandler(ILogger<ParallelMessageHandler<TKey, TValue>> logger,
             Dictionary<TKey, Task> dictionary)
         {
             _logger = logger;
@@ -32,13 +32,13 @@ namespace SimpleRabbit.NetCore
         }
 
         /// <summary>
-        ///     This method is required for IMessageHandler implementation.
+        /// This method is required for IMessageHandler implementation.
         /// </summary>
         /// <returns></returns>
         public abstract bool CanProcess(string tag);
 
         /// <summary>
-        ///     This method is run sequentially. The number of tasks will be dependent on the prefetch setting in Rabbit.
+        /// This method is run sequentially. The number of tasks will be dependent on the prefetch setting in Rabbit.
         /// </summary>
         /// <param name="message"></param>
         public Acknowledgement Process(BasicMessage message)
@@ -52,6 +52,7 @@ namespace SimpleRabbit.NetCore
                 if (key == null)
                 {
                     _logger.LogInformation($"Message ignored {message.Properties?.MessageId} -> {message.Body}, no key");
+                    // Acking so the message gets removed from the queue
                     return Acknowledgement.Ack;
                 }
 
@@ -69,6 +70,8 @@ namespace SimpleRabbit.NetCore
                     var tailTask = ContinueTaskQueue(task, message, key, item);
                     _tasks[key] = tailTask; // add completed task to the to be used.
                 }
+                
+                // Ignoring as we are handling the acking ourselves in parallel
                 return Acknowledgement.Ignore;
             }
             catch (Exception e)
@@ -79,14 +82,14 @@ namespace SimpleRabbit.NetCore
         }
 
         /// <summary>
-        ///     Must be provided to decompose the message to a TValue e.g. perform any deserialisation or object creation.
+        /// Must be provided to decompose the message to a TValue e.g. perform any deserialisation or object creation.
         /// </summary>
         /// <param name="message"></param>
         /// <returns>The decomposed message</returns>
         protected abstract TValue Get(BasicMessage message);
 
         /// <summary>
-        ///     Must be provided to extract the Key from the (decomposed) item.
+        /// Must be provided to extract the Key from the (decomposed) item.
         /// </summary>
         /// <param name="item"></param>
         /// <returns>The decomposed message</returns>
@@ -110,15 +113,14 @@ namespace SimpleRabbit.NetCore
             {
                 if (!t.IsCompletedSuccessfully)
                 {
-                    message.Nack();
+                    message.HandleAck(Acknowledgement.NackRequeue);
                     throw new Exception($"Processing chain aborted for {key}");
                 }
 
                 try
                 {
-                    await ProcessAsync(item);
-                    // TODO: implement nack with false requeue
-                    message.Ack();
+                    var acknowledgement = await ProcessAsync(item);
+                    message.HandleAck(acknowledgement);
                 }
                 catch (Exception e)
                 {

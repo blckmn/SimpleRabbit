@@ -34,14 +34,36 @@ namespace SimpleRabbit.NetCore
         public string CorrelationId => Properties?.CorrelationId;
         public IDictionary<string, object> Headers => Properties?.Headers;
 
-        public void Ack()
+        private void Ack()
         {
             Channel?.BasicAck(DeliveryTag, false);
         }
 
-        public void Nack(bool requeue = true)
+        private void Nack(bool requeue)
         {
             Channel?.BasicNack(DeliveryTag, false, requeue);
+        }
+
+        /// <summary>
+        /// Handles the acknowledgement of the message. 
+        /// </summary>
+        /// <param name="acknowledgement"><see cref="Acknowledgement"/> enum denoting how the message should be acknowledged.</param>
+        public void HandleAck(Acknowledgement acknowledgement)
+        {
+            switch (acknowledgement)
+            {
+                case Acknowledgement.Ack:
+                    Ack();
+                    break;
+                case Acknowledgement.NackRequeue:
+                    Nack(true);
+                    break;
+                case Acknowledgement.NackDeadLetter:
+                    Nack(false);
+                    break;
+                case Acknowledgement.Ignore:
+                    break;
+            }
         }
     }
 }
