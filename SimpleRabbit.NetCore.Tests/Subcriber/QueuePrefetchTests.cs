@@ -27,8 +27,8 @@ namespace SimpleRabbit.NetCore.Tests
         private Acknowledgement Process(BasicMessage args)
         {
             processCount++;
-            // don't pick up the messages, so no more events come after the prefetch limit is reached
-            return Acknowledgement.NackRequeue;
+            // ignore messages, so no more events come after the prefetch limit is reached
+            return Acknowledgement.Ignore;
         }
 
         [OneTimeTearDown]
