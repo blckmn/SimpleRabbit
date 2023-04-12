@@ -48,7 +48,7 @@ namespace SimpleRabbit.NetCore.Tests
             var channel2 = service.ExposedChannel;
 
             connection1.IsOpen.Should().BeFalse();
-            channel1.IsClosed.Should().BeTrue();
+            channel1.IsOpen.Should().BeFalse();
 
             factory1.Should().BeSameAs(factory2);
             connection1.Should().NotBeSameAs(connection2);
@@ -71,7 +71,7 @@ namespace SimpleRabbit.NetCore.Tests
             var channel2 = service.ExposedChannel;
 
             connection1.IsOpen.Should().BeFalse();
-            channel1.IsClosed.Should().BeTrue();
+            channel1.IsOpen.Should().BeFalse();
 
             factory1.Should().NotBeSameAs(factory2);
             connection1.Should().NotBeSameAs(connection2);
