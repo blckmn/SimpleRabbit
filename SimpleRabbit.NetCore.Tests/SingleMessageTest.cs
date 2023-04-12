@@ -35,11 +35,11 @@ namespace SimpleRabbit.NetCore.Tests
             handler.Handler = Process;
         }
 
-        private bool Process(BasicMessage args)
+        private Acknowledgement Process(BasicMessage args)
         {
             recieved = args;
             tokenSource.Cancel();
-            return true;
+            return Acknowledgement.Ack;
         }
 
         [OneTimeTearDown]

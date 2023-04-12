@@ -24,11 +24,11 @@ namespace SimpleRabbit.NetCore.Tests
             handler.Handler = Process;
         }
 
-        private bool Process(BasicMessage args)
+        private Acknowledgement Process(BasicMessage args)
         {
             processCount++;
             // don't pick up the messages, so no more events come after the prefetch limit is reached
-            return false;
+            return Acknowledgement.NackRequeue;
         }
 
         [OneTimeTearDown]
