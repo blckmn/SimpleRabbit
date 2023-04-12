@@ -259,4 +259,11 @@ Note : The names of the configuration will be used to match the list of queues a
 
 ### Local Rabbit
 
-within the RabbitMQ server [folder](RabbitMQ%20server) there contains a docker build of a preconfigured rabbit server, able to run the example projects.
+Within the RabbitMQ server [folder](RabbitMQ%20server) there contains a docker build of a pre-configured rabbit server, able to run the example projects.
+
+Within that directory, run the following bash command to start the server: 
+
+```
+docker build -t localrabbit . && 
+docker run -p 5672:5672 -p 15672:15672 localrabbit
+```
