@@ -141,8 +141,7 @@ namespace SimpleRabbit.NetCore.Tests
             recieved.Body.Should().Be(message);
             recieved.Properties.AppId.Should().Be(properties.AppId);
             recieved.Headers.Should().ContainKey("hi")
-                .WhichValue.Should().BeEquivalentTo(list.Select(s => Encoding.UTF8.GetBytes(s)));
-
+                .WhoseValue.Should().BeEquivalentTo(list.Select(s => Encoding.UTF8.GetBytes(s)));
         }
 
 

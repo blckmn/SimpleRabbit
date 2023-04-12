@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>BLCKMN</Authors>
     <PackageLicenseUrl></PackageLicenseUrl>
@@ -10,7 +10,7 @@
 
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
     <Copyright>Copyright © BLCKMN 2018</Copyright>
-    <Summary>A simple DotNetCore (2.1) wrapper for the RabbitMQ client.</Summary>
+    <Summary>A simple .NET Standard 2 wrapper for the RabbitMQ client.</Summary>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>SimpleRabbit.NetCore</Title>
     <PackageId>SimpleRabbit.NetCore</PackageId>
@@ -20,8 +20,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.7" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.32" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.32" />
     <PackageReference Include="RabbitMq.Client" Version="6.2.2" />
   </ItemGroup>
 
