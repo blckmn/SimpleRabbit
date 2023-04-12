@@ -56,6 +56,10 @@ Below is a [C4 Component diagram](https://en.wikipedia.org/wiki/C4_model#Overvie
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
 
+## Contributing 
+
+Please fork this repo then create a PR from the fork into the original one. 
+
 ## Usage
 
 ### Publishing
