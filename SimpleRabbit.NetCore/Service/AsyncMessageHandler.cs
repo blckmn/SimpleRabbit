@@ -41,8 +41,7 @@ namespace SimpleRabbit.NetCore
         ///     This method is run sequentially. The number of tasks will be dependent on the prefetch setting in Rabbit.
         /// </summary>
         /// <param name="message"></param>
-        /// <returns></returns>
-        public bool Process(BasicMessage message)
+        public Acknowledgement Process(BasicMessage message)
         {
             try
             {
@@ -53,7 +52,7 @@ namespace SimpleRabbit.NetCore
                 if (key == null)
                 {
                     _logger.LogInformation($"Message ignored {message.Properties?.MessageId} -> {message.Body}, no key");
-                    return true;
+                    return Acknowledgement.Ack;
                 }
 
                 // Enforce thread safety when manipulating the dictionary of running tasks
@@ -70,7 +69,7 @@ namespace SimpleRabbit.NetCore
                     var tailTask = ContinueTaskQueue(task, message, key, item);
                     _tasks[key] = tailTask; // add completed task to the to be used.
                 }
-                return false;
+                return Acknowledgement.Ignore;
             }
             catch (Exception e)
             {
@@ -138,6 +137,6 @@ namespace SimpleRabbit.NetCore
             }).Unwrap();
         }
 
-        protected abstract Task ProcessAsync(TValue item);
+        protected abstract Task<Acknowledgement> ProcessAsync(TValue item);
     }
 }

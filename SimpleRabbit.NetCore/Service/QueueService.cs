@@ -104,12 +104,13 @@ namespace SimpleRabbit.NetCore
                     case Acknowledgement.Ack:
                         message.Ack();
                         break;
-                    // Where was Nack called before? 
                     case Acknowledgement.NackRequeue:
                         message.Nack(true);
                         break;
                     case Acknowledgement.NackDeadLetter:
                         message.Nack(false);
+                        break;
+                    case Acknowledgement.Ignore:
                         break;
                 }
 
