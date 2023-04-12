@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="microsoft.extensions.Configuration.Json" Version="3.1.7" />
-    <PackageReference Include="microsoft.extensions.DependencyInjection" Version="3.1.32" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.32" />
+    <PackageReference Include="microsoft.extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="microsoft.extensions.DependencyInjection" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
