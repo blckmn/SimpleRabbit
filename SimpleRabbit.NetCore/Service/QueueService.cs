@@ -98,13 +98,21 @@ namespace SimpleRabbit.NetCore
             var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try
             {
-                
-                // TODO: look into playing around with the response from IMessageHandler.Process - potentially
-                // extend to support more responses than just bool (e.g. ack, nack, nack requeue etc.)
-                if (_handler.Process(message))
+                var acknowledgement = _handler.Process(message);
+                switch (acknowledgement) 
                 {
-                    message.Ack();
+                    case Acknowledgement.Ack:
+                        message.Ack();
+                        break;
+                    // Where was Nack called before? 
+                    case Acknowledgement.NackRequeue:
+                        message.Nack(true);
+                        break;
+                    case Acknowledgement.NackDeadLetter:
+                        message.Nack(false);
+                        break;
                 }
+
                 _retryCount = 0;
             }
             catch (Exception ex)
