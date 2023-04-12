@@ -10,12 +10,12 @@ namespace Subscriber.Service.Service
             return true;
         }
 
-        public bool Process(BasicMessage message)
+        public Acknowledgement Process(BasicMessage message)
         {
             Console.WriteLine(message.Body);
 
-            // return true if you want to ack immediately. False if you want to handle the ack (e.g. dispatch to a thread - and ack later).
-            return true;
+            // See Acknowledgement enum for available options.
+            return Acknowledgement.Ack;
         }
     }
 }
