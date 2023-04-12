@@ -14,7 +14,51 @@ There are two packages on Nuget.
 
 Installing is as easy as: `dotnet add package SimpleRabbit.NetCore` or `Install-Package SimpleRabbit.NetCore` depending on your setup.
 
-# Publishing
+### Component Diagram
+
+Below is a [C4 Component diagram](https://en.wikipedia.org/wiki/C4_model#Overview) of the Simple Rabbit library: 
+
+```mermaid
+    C4Component
+    title Component diagram for Simple Rabbit
+
+    Container(rabbitmq, "RabbitMQ", "RabbitMQ Server", "Message broker system")
+
+    Container_Boundary(simpleRabbit, "SimpleRabbit.NetCore") {
+        Component(publishService, "IPublishService", "Interface", "Enables message publishing to exchanges")
+        Component(basicRabbitService, "IBasicRabbitService", "Interface", "Wrapper over the Rabbit connection factory.<br /> Provides the basics to interact with a rabbit instance")
+        Component(queueService, "IQueueService", "Interface", "Enables queue subscriptions and<br /> the handling of messages")
+        Component(iMessageHandler, "IMessageHandler", "Interface", "Contract for handlers to process<br /> messages based on consumer tag")
+        Component(asyncMessageHandler, "AsyncMessageHandler", "Class", "Enables async message processing<br /> via a queue of process tasks")
+        
+        Rel(publishService, basicRabbitService, "Extends")
+        Rel(queueService, basicRabbitService, "Extends")
+        Rel(asyncMessageHandler, iMessageHandler, "Implements")
+    }
+
+    Container_Boundary(simpleRabbitPublish, "SimpleRabbit.NetCore.Publish", "Provides a Publishing factory that can be used to have multiple rabbit configurations") {
+        Component(publisherFactory, "PublisherFactory", "Class", "Factory to handle IPublishService instances<br /> for each rabbit configuration")
+
+        Rel(publisherFactory, publishService, "Uses")
+    }
+
+    Container_Boundary(simpleRabbitService, "SimpleRabbit.NetCore.Service", "Provides a Publishing factory that can be used to have multiple rabbit configurations") {
+        Component(queueFactory, "QueueFactory", "Class", "Manages IMessageHandlers created by clients")
+
+        Rel(queueFactory, iMessageHandler, "Uses")
+        Rel(queueFactory, queueService, "Uses")
+    }
+
+    Rel(queueService, rabbitmq, "Uses")
+    Rel(publishService, rabbitmq, "Uses")
+    Rel(basicRabbitService, rabbitmq, "Uses")
+
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
+
+## Usage
+
+### Publishing
 
 [sample project](Examples/Publisher)
 
@@ -53,7 +97,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
     }
 ```
 
-# Subscribing
+### Subscribing
 
 [sample project](Examples/Subscriber.Service)
 
@@ -209,6 +253,6 @@ Multiple cluster subscribing only requires additional registrations of configura
 
 Note : The names of the configuration will be used to match the list of queues and rabbit configuration together.
 
-## Local Rabbit
+### Local Rabbit
 
 within the RabbitMQ server [folder](RabbitMQ%20server) there contains a docker build of a preconfigured rabbit server, able to run the example projects.
