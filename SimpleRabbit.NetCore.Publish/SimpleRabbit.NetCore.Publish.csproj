@@ -10,7 +10,7 @@
 
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Provides a Publishing factory that can be used to have multiple rabbit configurations</Description>
     <Copyright>Copyright © BLCKMN 2020</Copyright>
-    <Summary>A simple DotNetCore (2.1) HostedService Subscriber wrapper for the RabbitMQ client.</Summary>
+    <Summary>A simple .NET Standard 2.1 HostedService Subscriber wrapper for the RabbitMQ client.</Summary>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>SimpleRabbit.NetCore.Publish</Title>
     <PackageId>SimpleRabbit.NetCore.Publish</PackageId>

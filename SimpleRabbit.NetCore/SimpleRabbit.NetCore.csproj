@@ -10,7 +10,7 @@
 
     <Description>An easy wrapper for the RabbitMQ client that allows inclusion in DotNetCore projects. Can be used with the standard dependency injection provided in DotNetCore.</Description>
     <Copyright>Copyright © BLCKMN 2018</Copyright>
-    <Summary>A simple .NET Standard 2 wrapper for the RabbitMQ client.</Summary>
+    <Summary>A simple .NET Standard 2.1 wrapper for the RabbitMQ client.</Summary>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Title>SimpleRabbit.NetCore</Title>
     <PackageId>SimpleRabbit.NetCore</PackageId>

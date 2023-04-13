@@ -21,7 +21,7 @@ namespace SimpleRabbit.NetCore
         NackDeadLetter = 3,
 
         /// <summary>
-        /// Return this if you handle message acknowledgements in your IMessageHandler implementation yourself.
+        /// Return this if you handle message acknowledgements in your IMessageHandler implementation.
         /// </summary>
         Manual = 4
     }
