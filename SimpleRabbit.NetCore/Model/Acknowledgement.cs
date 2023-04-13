@@ -21,8 +21,8 @@ namespace SimpleRabbit.NetCore
         NackDeadLetter = 3,
 
         /// <summary>
-        /// Hack to enable async message handler to work correctly and handle acknowledgements separately from QueueService.
+        /// Return this if you handle message acknowledgements in your IMessageHandler implementation yourself.
         /// </summary>
-        Ignore = 4
+        Manual = 4
     }
 }

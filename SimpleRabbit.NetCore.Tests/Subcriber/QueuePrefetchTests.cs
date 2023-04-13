@@ -28,7 +28,7 @@ namespace SimpleRabbit.NetCore.Tests
         {
             processCount++;
             // ignore messages, so no more events come after the prefetch limit is reached
-            return Acknowledgement.Ignore;
+            return Acknowledgement.Manual;
         }
 
         [OneTimeTearDown]

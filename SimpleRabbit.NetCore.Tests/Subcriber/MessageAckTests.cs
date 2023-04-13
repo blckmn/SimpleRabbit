@@ -37,7 +37,7 @@ public class MessageAckTests : IntegrationFixture
             "ack" => Acknowledgement.Ack,
             "nackrequeue" => Acknowledgement.NackRequeue,
             "nackdeadletter" => Acknowledgement.NackDeadLetter,
-            _ => Acknowledgement.Ignore
+            _ => Acknowledgement.Manual
         };
     }
     
@@ -120,13 +120,13 @@ public class MessageAckTests : IntegrationFixture
     }
     
     [Test]
-    public async Task Ignore_ShouldRemainInQueue()
+    public async Task Manual_ShouldRemainInQueue()
     {
         // Arrange
         var queue = new QueueService(ExposedRabbitService.validConfig, _nullLogger);
         queue.Start(_config, handler);
         
-        var body = Encoding.UTF8.GetBytes("ignore");
+        var body = Encoding.UTF8.GetBytes("manual");
         basicService.ExposedChannel.BasicPublish(ExchangeName, "", true, null, body);
         
         await Task.Delay(RoundTripWaitTime);

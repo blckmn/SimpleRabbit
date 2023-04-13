@@ -61,7 +61,7 @@ namespace SimpleRabbit.NetCore
                 case Acknowledgement.NackDeadLetter:
                     Nack(false);
                     break;
-                case Acknowledgement.Ignore:
+                case Acknowledgement.Manual:
                     break;
             }
         }

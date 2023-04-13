@@ -72,7 +72,7 @@ namespace SimpleRabbit.NetCore
                 }
                 
                 // Ignoring as we are handling the acking ourselves in parallel
-                return Acknowledgement.Ignore;
+                return Acknowledgement.Manual;
             }
             catch (Exception e)
             {
