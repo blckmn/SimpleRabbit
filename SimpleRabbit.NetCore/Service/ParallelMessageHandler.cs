@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,30 @@ namespace SimpleRabbit.NetCore
         private readonly Dictionary<TKey, Task> _tasks;
         private readonly object _lock = new object();
 
+        public class DeserializedMessage<TKey, TValue>
+        {
+            public TKey Key { get; private set; }
+            public TValue Value { get; private set; }
+            public Acknowledgement? Ack { get; private set; }
+
+            public static DeserializedMessage<TKey, TValue> Success(TKey key, TValue value)
+            {
+                return new DeserializedMessage<TKey, TValue>
+                {
+                    Key = key,
+                    Value = value,
+                };
+            }
+            
+            public static DeserializedMessage<TKey, TValue> Fail(Acknowledgement ack)
+            {
+                return new DeserializedMessage<TKey, TValue>
+                {
+                    Ack = ack
+                };
+            }
+        }
+        
         protected ParallelMessageHandler(ILogger<ParallelMessageHandler<TKey, TValue>> logger)
         {
             _logger = logger;
@@ -45,13 +71,19 @@ namespace SimpleRabbit.NetCore
         {
             try
             {
-                var item = Get(message);
-                var key = GetKey(item);
-
-                _logger.LogDebug($"Processing message for {key}");
+                if (!TryDeserializeMessage(message, out var value))
+                {
+                    _logger.LogInformation("{ValueAck} message {PropertiesMessageId} as it failed to deserialize -> {MessageBody},", 
+                        value.Ack,
+                        message.Properties?.MessageId, 
+                        message.Body);
+                    return value.Ack;
+                }
+                
+                _logger.LogDebug($"Processing message for {value.Key}");
+                
                 if (key == null)
                 {
-                    _logger.LogInformation($"Message ignored {message.Properties?.MessageId} -> {message.Body}, no key");
                     // Acking so the message gets removed from the queue
                     return Acknowledgement.Ack;
                 }
@@ -80,21 +112,9 @@ namespace SimpleRabbit.NetCore
                 throw;
             }
         }
-
-        /// <summary>
-        /// Must be provided to decompose the message to a TValue e.g. perform any deserialisation or object creation.
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns>The decomposed message</returns>
-        protected abstract TValue Get(BasicMessage message);
-
-        /// <summary>
-        /// Must be provided to extract the Key from the (decomposed) item.
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns>The decomposed message</returns>
-        protected abstract TKey GetKey(TValue item);
-
+        
+        protected abstract bool TryDeserializeMessage(BasicMessage msg, [MaybeNullWhen(false)] out DeserializedMessage<TKey, TValue> value);
+        
         private void CleanUpTasks()
         {
             var completed = _tasks
@@ -141,4 +161,5 @@ namespace SimpleRabbit.NetCore
 
         protected abstract Task<Acknowledgement> ProcessAsync(TValue item);
     }
+    
 }

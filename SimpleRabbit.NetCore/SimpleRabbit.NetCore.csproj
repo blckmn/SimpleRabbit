@@ -16,7 +16,6 @@
     <PackageId>SimpleRabbit.NetCore</PackageId>
     <PackageTags>RabbitMq Publish</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-
   </PropertyGroup>
 
   <ItemGroup>

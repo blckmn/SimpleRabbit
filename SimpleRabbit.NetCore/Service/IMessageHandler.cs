@@ -1,4 +1,6 @@
-﻿namespace SimpleRabbit.NetCore
+﻿using System.Threading.Tasks;
+
+namespace SimpleRabbit.NetCore
 {
     public interface IMessageHandler
     {
@@ -14,6 +16,6 @@
         /// </summary>
         /// <param name="message">A message containing headers and the raw data.</param>
         /// <returns><see cref="Acknowledgement"/> enum denoting how the message should be acknowledged.</returns>
-        Acknowledgement Process(BasicMessage message);
+        Task<Acknowledgement> Process(BasicMessage message);
     }
 }

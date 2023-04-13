@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore
 {
@@ -78,6 +79,8 @@ namespace SimpleRabbit.NetCore
             try
             {
                 var consumer = new EventingBasicConsumer(Channel);
+                var asynccon = new AsyncEventingBasicConsumer(Channel);
+                asynccon.Received += ReceiveEventAsync;
                 consumer.Received += ReceiveEvent;
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
@@ -90,6 +93,10 @@ namespace SimpleRabbit.NetCore
             }
         }
 
+        private async Task ReceiveEventAsync(object sender, BasicDeliverEventArgs args)
+        {
+            
+        }
 
         private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
         {
