@@ -66,7 +66,7 @@ Please fork this repo then create a PR from the fork into the original one.
 
 [sample project](Examples/Publisher)
 
-```
+```csharp
     private static void Main()
     {
         var configuration = new ConfigurationBuilder()
@@ -87,7 +87,7 @@ Please fork this repo then create a PR from the fork into the original one.
 
 The corresponding appsettings.json file (to provide connectivity to rabbit):
 
-```
+```csharp
     {
         "RabbitConfiguration": {
             "Username": "username",
@@ -105,7 +105,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
 
 [sample project](Examples/Subscriber.Service)
 
-```
+```csharp
     public static async Task Main(string[] args)
     {
         var builder = new HostBuilder()
@@ -129,7 +129,7 @@ The corresponding appsettings.json file (to provide connectivity to rabbit):
 
 The message handler is chosen based on the CanProcess call. The consumer tag is passed in i.e. tags are matched not queues. This allows a handler to handle multiple messages from multiple queues.
 
-```
+```csharp
     internal class MessageProcessor : IMessageHandler
     {
         public bool CanProcess(string tag)
@@ -159,7 +159,7 @@ The message handler is chosen based on the CanProcess call. The consumer tag is 
 
 Subscribers are a list (of queues to consume), and they are auto wired up to the queue and are eventing based. The `ConsumerTag` is the tag passed to `CanProcess(string tag)`
 
-```
+```csharp
     {
         "RabbitConfiguration": {
             "Username": "username",
@@ -186,7 +186,7 @@ Subscribers are a list (of queues to consume), and they are auto wired up to the
 
 There is additional factories that can make use of multiple configurations. The setup for the publisher factory is as follows
 
-```
+```csharp
     public class Program
     {
         public static void Main(string[] args)
@@ -218,7 +218,7 @@ There is additional factories that can make use of multiple configurations. The 
 
 The `appsettings.json` file will look something like this:
 
-```
+```json
 {
   "RabbitConfiguration": {
     "Configuration1": {
@@ -249,7 +249,7 @@ Note: the multiple configuration setup uses IOptionMonitor, which will listen to
 
 Multiple cluster subscribing only requires additional registrations of configurations. This will also invalidate and respawn connections on configuration update like publishing.
 
-```
+```csharp
  services
     .AddRabbitConfiguration("name",config.GetSection("RabbitConfiguration"))
     .AddSubscriberConfiguration("name",config.GetSection("Subscribers"))
@@ -263,7 +263,7 @@ Within the RabbitMQ server [folder](RabbitMQ%20server) there contains a docker b
 
 Within that directory, run the following bash command to start the server: 
 
-```
+```shell
 docker build -t localrabbit . && 
 docker run -p 5672:5672 -p 15672:15672 localrabbit
 ```
