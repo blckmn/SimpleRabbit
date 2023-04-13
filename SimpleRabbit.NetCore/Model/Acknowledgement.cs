@@ -11,12 +11,12 @@ namespace SimpleRabbit.NetCore
         Ack = 1,
 
         /// <summary>
-        /// Do not acknowledge the message; requeue it on original queue.
+        /// Negatively acknowledge the message; requeue it on original queue.
         /// </summary>
         NackRequeue = 2,
 
         /// <summary>
-        /// Do not acknowledge the message; send it to dead letter queue specified in x-dead-letter-exchange and x-dead-letter-routing-key arguments.
+        /// Negatively acknowledge the message; send it to dead letter queue specified in x-dead-letter-exchange and x-dead-letter-routing-key arguments.
         /// </summary>
         NackDeadLetter = 3,
 
