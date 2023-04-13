@@ -78,10 +78,8 @@ namespace SimpleRabbit.NetCore
 
             try
             {
-                var consumer = new EventingBasicConsumer(Channel);
-                var asynccon = new AsyncEventingBasicConsumer(Channel);
-                asynccon.Received += ReceiveEventAsync;
-                consumer.Received += ReceiveEvent;
+                var consumer = new AsyncEventingBasicConsumer(Channel);
+                consumer.Received += ReceiveEventAsync;
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
                 Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.DisplayName ?? _queueServiceParams.ConsumerTag, consumer);
@@ -95,17 +93,12 @@ namespace SimpleRabbit.NetCore
 
         private async Task ReceiveEventAsync(object sender, BasicDeliverEventArgs args)
         {
-            
-        }
-
-        private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
-        {
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
             var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try
             {
-                var acknowledgement = _handler.Process(message);
+                var acknowledgement = await _handler.Process(message);
                 message.HandleAck(acknowledgement);
                 _retryCount = 0;
             }

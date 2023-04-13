@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -8,9 +7,9 @@ namespace Subscriber.Service
 {
     public record TestDeserialisedMessage(int Key, string Value);
     
-    public class ParallelMessageHandler : ParallelMessageHandler<int, TestDeserialisedMessage>
+    public class OrderedMessageHandler : OrderedMessageHandler<int, TestDeserialisedMessage>
     {
-        public ParallelMessageHandler(ILogger<ParallelMessageHandler<int, TestDeserialisedMessage>> logger) : base(logger)
+        public OrderedMessageHandler(ILogger<OrderedMessageHandler<int, TestDeserialisedMessage>> logger) : base(logger)
         {
         }
         
@@ -19,19 +18,17 @@ namespace Subscriber.Service
             return true;
         }
 
-        protected override bool TryDeserializeMessage(BasicMessage msg, out DeserializedMessage<int, TestDeserialisedMessage> value)
+        protected override DeserializedMessage TryDeserializeMessage(BasicMessage msg)
         {
             try
             {
                 var deserialised = JsonSerializer.Deserialize<TestDeserialisedMessage>(msg.Body);
-                value = DeserializedMessage<int, TestDeserialisedMessage>.Success(deserialised.Key, deserialised);
-                return true;
+                return DeserializedMessage.Success(deserialised.Key, deserialised);
             }
             catch (JsonException e)
             {
+                return DeserializedMessage.Fail(Acknowledgement.Ack);
                 // If message cannot be deserialized, you can specify the acknowledgement behaviour for more granularity.
-                value = DeserializedMessage<int, TestDeserialisedMessage>.Fail(Acknowledgement.NackDeadLetter);
-                return false;
             }
         }
 

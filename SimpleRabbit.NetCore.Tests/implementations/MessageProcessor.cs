@@ -1,5 +1,6 @@
 ﻿using SimpleRabbit.NetCore;
 using System;
+using System.Threading.Tasks;
 
 namespace Subscriber.Service.Service
 {
@@ -11,7 +12,7 @@ namespace Subscriber.Service.Service
             return true;
         }
 
-        public Acknowledgement Process(BasicMessage message)
+        public async Task<Acknowledgement> Process(BasicMessage message)
         {
             return Handler.Invoke(message);
         }

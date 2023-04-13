@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,48 +8,51 @@ using Microsoft.Extensions.Logging;
 namespace SimpleRabbit.NetCore
 {
     /// <summary>
-    /// A task queue based ordered dispatcher. Retrieves messages in batch synchronously, and handles them in parallel. Level of parallism is dependent on the prefetch setting in Rabbit.
+    /// A task queue based ordered dispatcher. Processes messages based on provided key in FIFO.
     /// </summary>
     /// <typeparam name="TKey">The key to use for ordering</typeparam>
     /// <typeparam name="TValue">The value to work on</typeparam>
-    public abstract class ParallelMessageHandler<TKey, TValue> : IMessageHandler
+    public abstract class OrderedMessageHandler<TKey, TValue> : IMessageHandler
     {
-        private readonly ILogger<ParallelMessageHandler<TKey, TValue>> _logger;
+        private readonly ILogger<OrderedMessageHandler<TKey, TValue>> _logger;
 
         private readonly Dictionary<TKey, Task> _tasks;
         private readonly object _lock = new object();
 
-        public class DeserializedMessage<TKey, TValue>
+        public class DeserializedMessage
         {
             public TKey Key { get; private set; }
             public TValue Value { get; private set; }
             public Acknowledgement? Ack { get; private set; }
+            public bool Successful { get; private set; }
 
-            public static DeserializedMessage<TKey, TValue> Success(TKey key, TValue value)
+            public static DeserializedMessage Success(TKey key, TValue value)
             {
-                return new DeserializedMessage<TKey, TValue>
+                return new DeserializedMessage
                 {
                     Key = key,
                     Value = value,
+                    Successful = true
                 };
             }
             
-            public static DeserializedMessage<TKey, TValue> Fail(Acknowledgement ack)
+            public static DeserializedMessage Fail(Acknowledgement ack)
             {
-                return new DeserializedMessage<TKey, TValue>
+                return new DeserializedMessage
                 {
-                    Ack = ack
+                    Ack = ack,
+                    Successful = false
                 };
             }
         }
         
-        protected ParallelMessageHandler(ILogger<ParallelMessageHandler<TKey, TValue>> logger)
+        protected OrderedMessageHandler(ILogger<OrderedMessageHandler<TKey, TValue>> logger)
         {
             _logger = logger;
             _tasks = new Dictionary<TKey, Task>();
         }
 
-        protected ParallelMessageHandler(ILogger<ParallelMessageHandler<TKey, TValue>> logger,
+        protected OrderedMessageHandler(ILogger<OrderedMessageHandler<TKey, TValue>> logger,
             Dictionary<TKey, Task> dictionary)
         {
             _logger = logger;
@@ -67,44 +69,40 @@ namespace SimpleRabbit.NetCore
         /// This method is run sequentially. The number of tasks will be dependent on the prefetch setting in Rabbit.
         /// </summary>
         /// <param name="message"></param>
-        public Acknowledgement Process(BasicMessage message)
+        public Task<Acknowledgement> Process(BasicMessage message)
         {
             try
             {
-                if (!TryDeserializeMessage(message, out var value))
+                var deserializedMessage = TryDeserializeMessage(message);
+                if (!deserializedMessage.Successful)
                 {
                     _logger.LogInformation("{ValueAck} message {PropertiesMessageId} as it failed to deserialize -> {MessageBody},", 
-                        value.Ack,
+                        deserializedMessage.Ack,
                         message.Properties?.MessageId, 
                         message.Body);
-                    return value.Ack;
+                    
+                    return Task.FromResult(deserializedMessage.Ack.Value);
                 }
                 
-                _logger.LogDebug($"Processing message for {value.Key}");
-                
-                if (key == null)
-                {
-                    // Acking so the message gets removed from the queue
-                    return Acknowledgement.Ack;
-                }
+                _logger.LogDebug($"Processing message for {deserializedMessage.Key}");
 
                 // Enforce thread safety when manipulating the dictionary of running tasks
                 lock (_lock)
                 {
                     CleanUpTasks();
 
-                    if (!_tasks.TryGetValue(key, out var task))
+                    if (!_tasks.TryGetValue(deserializedMessage.Key, out var task))
                     {
                         task = Task.CompletedTask;
                     }
 
                     // save the task at the end of the queues.
-                    var tailTask = ContinueTaskQueue(task, message, key, item);
-                    _tasks[key] = tailTask; // add completed task to the to be used.
+                    var tailTask = ContinueTaskQueue(task, message, deserializedMessage.Key, deserializedMessage.Value);
+                    _tasks[deserializedMessage.Key] = tailTask; // add completed task to the to be used.
                 }
                 
                 // Ignoring as we are handling the acking ourselves in parallel
-                return Acknowledgement.Manual;
+                return Task.FromResult(Acknowledgement.Manual);
             }
             catch (Exception e)
             {
@@ -113,7 +111,8 @@ namespace SimpleRabbit.NetCore
             }
         }
         
-        protected abstract bool TryDeserializeMessage(BasicMessage msg, [MaybeNullWhen(false)] out DeserializedMessage<TKey, TValue> value);
+        protected abstract DeserializedMessage TryDeserializeMessage(BasicMessage msg);
+        // protected abstract bool TryDeserializeMessage(BasicMessage msg, [MaybeNullWhen(false)] out DeserializedMessage value);
         
         private void CleanUpTasks()
         {

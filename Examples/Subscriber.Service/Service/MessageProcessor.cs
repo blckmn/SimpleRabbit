@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using SimpleRabbit.NetCore;
 
 namespace Subscriber.Service.Service
@@ -10,7 +11,7 @@ namespace Subscriber.Service.Service
             return true;
         }
 
-        public Acknowledgement Process(BasicMessage message)
+        public async Task<Acknowledgement> Process(BasicMessage message)
         {
             Console.WriteLine(message.Body);
 
