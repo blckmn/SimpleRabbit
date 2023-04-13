@@ -87,7 +87,7 @@ private static void Main()
 
 The corresponding appsettings.json file (to provide connectivity to rabbit):
 
-```csharp
+```json
 {
     "RabbitConfiguration": {
         "Username": "username",
