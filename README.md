@@ -138,21 +138,17 @@ internal class MessageProcessor : IMessageHandler
         return true;
     }
 
-    public bool Process(BasicMessage message)
+    public async Task<Acknowledgement> Process(BasicMessage message)
     {
         var body = message.Body;
 
         if (string.IsNullOrWhiteSpace(body))
-        {
             Console.WriteLine($"Message contents: {body}");
-        }
         else
-        {
             Console.WriteLine($"Empty message: {message.MessageId}")
-        }
-        /* return false will have the message Nack'd and requeued.
-            It can be acked later on*/
-        return true;
+           
+        // See the Acknowledgement enum for more options
+        return Acknowledgement.Ack;
     }
 }
 ```
