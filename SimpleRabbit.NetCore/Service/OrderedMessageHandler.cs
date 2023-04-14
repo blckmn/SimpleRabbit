@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,7 @@ namespace SimpleRabbit.NetCore
 {
     /// <summary>
     /// A task queue based ordered dispatcher. Processes messages based on provided key in FIFO.
+    /// The number of tasks is dependent on the prefetch setting in Rabbit.
     /// </summary>
     /// <typeparam name="TKey">The key to use for ordering</typeparam>
     /// <typeparam name="TValue">The value to work on</typeparam>
@@ -19,33 +19,6 @@ namespace SimpleRabbit.NetCore
         private readonly Dictionary<TKey, Task> _tasks;
         private readonly object _lock = new object();
 
-        public class DeserializedMessage
-        {
-            public TKey Key { get; private set; }
-            public TValue Value { get; private set; }
-            public Acknowledgement? Ack { get; private set; }
-            public bool Successful { get; private set; }
-
-            public static DeserializedMessage Success(TKey key, TValue value)
-            {
-                return new DeserializedMessage
-                {
-                    Key = key,
-                    Value = value,
-                    Successful = true
-                };
-            }
-            
-            public static DeserializedMessage Fail(Acknowledgement ack)
-            {
-                return new DeserializedMessage
-                {
-                    Ack = ack,
-                    Successful = false
-                };
-            }
-        }
-        
         protected OrderedMessageHandler(ILogger<OrderedMessageHandler<TKey, TValue>> logger)
         {
             _logger = logger;
@@ -58,47 +31,53 @@ namespace SimpleRabbit.NetCore
             _logger = logger;
             _tasks = dictionary;
         }
-
-        /// <summary>
-        /// This method is required for IMessageHandler implementation.
-        /// </summary>
-        /// <returns></returns>
+        
         public abstract bool CanProcess(string tag);
-
+        
         /// <summary>
-        /// This method is run sequentially. The number of tasks will be dependent on the prefetch setting in Rabbit.
+        /// Parse the message into its key and value.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">A message containing headers and the raw data.</param>
+        /// <returns><see cref="ParseResult"/> object.</returns>
+        protected abstract ParseResult Parse(BasicMessage message);
+        
+        /// <summary>
+        /// Process the value asynchronously.
+        /// </summary>
+        /// <param name="value">The value to work on.</param>
+        /// <returns><see cref="Acknowledgement"/> enum denoting how the message should be acknowledged.</returns>
+        protected abstract Task<Acknowledgement> ProcessAsync(TValue value);
+        
         public Task<Acknowledgement> Process(BasicMessage message)
         {
             try
             {
-                var deserializedMessage = TryDeserializeMessage(message);
-                if (!deserializedMessage.Successful)
+                var parseResult = Parse(message);
+                if (!parseResult.IsSuccessful)
                 {
                     _logger.LogInformation("{ValueAck} message {PropertiesMessageId} as it failed to deserialize -> {MessageBody},", 
-                        deserializedMessage.Ack,
+                        parseResult.Ack,
                         message.Properties?.MessageId, 
                         message.Body);
                     
-                    return Task.FromResult(deserializedMessage.Ack.Value);
+                    return Task.FromResult(parseResult.Ack.Value);
                 }
                 
-                _logger.LogDebug($"Processing message for {deserializedMessage.Key}");
+                _logger.LogDebug($"Processing message for {parseResult.Key}");
 
                 // Enforce thread safety when manipulating the dictionary of running tasks
                 lock (_lock)
                 {
                     CleanUpTasks();
 
-                    if (!_tasks.TryGetValue(deserializedMessage.Key, out var task))
+                    if (!_tasks.TryGetValue(parseResult.Key, out var task))
                     {
                         task = Task.CompletedTask;
                     }
 
                     // save the task at the end of the queues.
-                    var tailTask = ContinueTaskQueue(task, message, deserializedMessage.Key, deserializedMessage.Value);
-                    _tasks[deserializedMessage.Key] = tailTask; // add completed task to the to be used.
+                    var tailTask = ContinueTaskQueue(task, message, parseResult.Key, parseResult.Value);
+                    _tasks[parseResult.Key] = tailTask; // add completed task to the to be used.
                 }
                 
                 // Ignoring as we are handling the acking ourselves in parallel
@@ -110,9 +89,6 @@ namespace SimpleRabbit.NetCore
                 throw;
             }
         }
-        
-        protected abstract DeserializedMessage TryDeserializeMessage(BasicMessage msg);
-        // protected abstract bool TryDeserializeMessage(BasicMessage msg, [MaybeNullWhen(false)] out DeserializedMessage value);
         
         private void CleanUpTasks()
         {
@@ -158,7 +134,60 @@ namespace SimpleRabbit.NetCore
             }).Unwrap();
         }
 
-        protected abstract Task<Acknowledgement> ProcessAsync(TValue item);
+        /// <summary>
+        /// Result of parsing the key and value of a message.
+        /// </summary>
+        public class ParseResult
+        {   
+            /// <summary>
+            /// Message key. This is used for ordering.
+            /// </summary>
+            public TKey Key { get; private set; }
+            
+            /// <summary>
+            /// Message value to be processed.
+            /// </summary>
+            public TValue Value { get; private set; }
+            
+            /// <summary>
+            /// Null if successful, otherwise used to specify message acknowledgement. 
+            /// </summary>
+            public Acknowledgement? Ack { get; private set; }
+            
+            /// <summary>
+            /// True if parse was successful, false otherwise.
+            /// </summary>
+            public bool IsSuccessful { get; private set; }
+            
+            /// <summary>
+            /// Creates a success result.
+            /// </summary>
+            /// <param name="key">Message key.</param>
+            /// <param name="value">Message value.</param>
+            /// <returns><see cref="ParseResult"/> object with success set to true.</returns>
+            public static ParseResult Success(TKey key, TValue value)
+            {
+                return new ParseResult
+                {
+                    Key = key,
+                    Value = value,
+                    IsSuccessful = true
+                };
+            }
+            
+            /// <summary>
+            /// Creates a failure result.
+            /// </summary>
+            /// <param name="ack">Message <see cref="Acknowledgement"/> to send for erroneous message.</param>
+            /// <returns></returns>
+            public static ParseResult Fail(Acknowledgement ack)
+            {
+                return new ParseResult
+                {
+                    Ack = ack,
+                    IsSuccessful = false
+                };
+            }
+        }
     }
-    
 }

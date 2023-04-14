@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SimpleRabbit.NetCore;
 
-namespace Subscriber.Service
+namespace Subscriber.Service.Service
 {
     public record TestDeserialisedMessage(int Key, string Value);
     
@@ -18,21 +18,21 @@ namespace Subscriber.Service
             return true;
         }
 
-        protected override DeserializedMessage TryDeserializeMessage(BasicMessage msg)
+        protected override ParseResult Parse(BasicMessage message)
         {
             try
             {
-                var deserialised = JsonSerializer.Deserialize<TestDeserialisedMessage>(msg.Body);
-                return DeserializedMessage.Success(deserialised.Key, deserialised);
+                var deserialised = JsonSerializer.Deserialize<TestDeserialisedMessage>(message.Body);
+                return ParseResult.Success(deserialised.Key, deserialised);
             }
-            catch (JsonException e)
+            catch (JsonException)
             {
-                return DeserializedMessage.Fail(Acknowledgement.Ack);
                 // If message cannot be deserialized, you can specify the acknowledgement behaviour for more granularity.
+                return ParseResult.Fail(Acknowledgement.Ack);
             }
         }
 
-        protected override async Task<Acknowledgement> ProcessAsync(TestDeserialisedMessage item)
+        protected override async Task<Acknowledgement> ProcessAsync(TestDeserialisedMessage body)
         {
             // Process the message here.
             
