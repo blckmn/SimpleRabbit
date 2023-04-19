@@ -33,3 +33,4 @@ FolderProfile.pubxml
 *.csproj.DotSettings
 artifacts/
 .vscode/
+.idea/

@@ -35,11 +35,11 @@ namespace SimpleRabbit.NetCore.Tests
             handler.Handler = Process;
         }
 
-        private bool Process(BasicMessage args)
+        private Acknowledgement Process(BasicMessage args)
         {
             recieved = args;
             tokenSource.Cancel();
-            return true;
+            return Acknowledgement.Ack;
         }
 
         [OneTimeTearDown]
@@ -141,8 +141,7 @@ namespace SimpleRabbit.NetCore.Tests
             recieved.Body.Should().Be(message);
             recieved.Properties.AppId.Should().Be(properties.AppId);
             recieved.Headers.Should().ContainKey("hi")
-                .WhichValue.Should().BeEquivalentTo(list.Select(s => Encoding.UTF8.GetBytes(s)));
-
+                .WhoseValue.Should().BeEquivalentTo(list.Select(s => Encoding.UTF8.GetBytes(s)));
         }
 
 

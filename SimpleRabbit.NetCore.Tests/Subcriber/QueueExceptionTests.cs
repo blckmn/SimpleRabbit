@@ -33,7 +33,7 @@ namespace SimpleRabbit.NetCore.Tests
             handler.Handler = Process;
         }
 
-        private bool Process(BasicMessage args)
+        private Acknowledgement Process(BasicMessage args)
         {
             processCount++;
             if (args.Body.Equals(TestMessages.Exception) || // always throw exception
@@ -43,7 +43,7 @@ namespace SimpleRabbit.NetCore.Tests
                 throw new Exception("error");
             }
             successCount++;
-            return true;
+            return Acknowledgement.Ack;
         }
 
         [OneTimeTearDown]

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore
 {
@@ -77,8 +78,8 @@ namespace SimpleRabbit.NetCore
 
             try
             {
-                var consumer = new EventingBasicConsumer(Channel);
-                consumer.Received += ReceiveEvent;
+                var consumer = new AsyncEventingBasicConsumer(Channel);
+                consumer.Received += ReceiveEventAsync;
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
                 Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.DisplayName ?? _queueServiceParams.ConsumerTag, consumer);
@@ -90,20 +91,15 @@ namespace SimpleRabbit.NetCore
             }
         }
 
-
-        private void ReceiveEvent(object sender, BasicDeliverEventArgs args)
+        private async Task ReceiveEventAsync(object sender, BasicDeliverEventArgs args)
         {
             var channel = (sender as EventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
             var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try
             {
-                
-
-                if (_handler.Process(message))
-                {
-                    message.Ack();
-                }
+                var acknowledgement = await _handler.Process(message);
+                message.HandleAck(acknowledgement);
                 _retryCount = 0;
             }
             catch (Exception ex)

@@ -26,12 +26,33 @@
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
-      "arguments": { "x-queue-type": "classic" }
+      "arguments": { 
+        "x-queue-type": "classic",
+        "x-dead-letter-exchange": "MyDeadExchange"
+      }
+    },
+    {
+      "name": "MyDeadQueue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "classic"
+      }
     }
   ],
   "exchanges": [
     {
       "name": "MyExchange",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "MyDeadExchange",
       "vhost": "/",
       "type": "fanout",
       "durable": true,
@@ -45,6 +66,14 @@
       "source": "MyExchange",
       "vhost": "/",
       "destination": "MyQueue",
+      "destination_type": "queue",
+      "routing_key": "",
+      "arguments": {}
+    },
+    {
+      "source": "MyDeadExchange",
+      "vhost": "/",
+      "destination": "MyDeadQueue",
       "destination_type": "queue",
       "routing_key": "",
       "arguments": {}
