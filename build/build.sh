@@ -3,7 +3,7 @@
 set -e
 
 # version
-major="4"
+major="6"
 minor="0"
 
 basepath="${PWD}"
