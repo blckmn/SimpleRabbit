@@ -45,6 +45,8 @@ namespace SimpleRabbit.NetCore
                 _timer.Stop();
                 TimerActivation();
             };
+            
+            Factory.DispatchConsumersAsync = true;
         }
 
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
