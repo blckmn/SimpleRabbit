@@ -46,7 +46,7 @@ namespace SimpleRabbit.NetCore
                 TimerActivation();
             };
         }
-        
+
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
         {
             _queueServiceParams = new QueueConfiguration
