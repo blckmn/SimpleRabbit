@@ -31,7 +31,7 @@ namespace SimpleRabbit.NetCore
 
         private ConcurrentBag<ulong> _toBeNackedMessages = new ConcurrentBag<ulong>();
 
-        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options)
+        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(AdjustConfiguration(options))
         {
             _logger = logger;
 
@@ -45,10 +45,16 @@ namespace SimpleRabbit.NetCore
                 _timer.Stop();
                 TimerActivation();
             };
-            
+
             Factory.DispatchConsumersAsync = true;
         }
 
+        private static RabbitConfiguration AdjustConfiguration(RabbitConfiguration options)
+        {
+            options.UseAsyncDispatch = true;
+            return options;
+        }
+        
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
         {
             _queueServiceParams = new QueueConfiguration
@@ -95,7 +101,7 @@ namespace SimpleRabbit.NetCore
 
         private async Task ReceiveEventAsync(object sender, BasicDeliverEventArgs args)
         {
-            var channel = (sender as EventingBasicConsumer)?.Model;
+            var channel = (sender as AsyncEventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
             var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try

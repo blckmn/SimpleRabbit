@@ -34,5 +34,9 @@ namespace SimpleRabbit.NetCore
         /// Flag to indicate whether a connection recovery should also include topology (exchanges, queues, bindings) made in the connection. this is default to true
         /// </summary>
         public bool? TopologyRecoveryEnabled { get; set; }
+        /// <summary>
+        /// You should set this flag to true when you are using IAsyncBasicConsumer, default: false
+        /// </summary>
+        public bool? UseAsyncDispatch { get; set; }
     }
 }

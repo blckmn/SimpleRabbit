@@ -50,6 +50,7 @@ namespace SimpleRabbit.NetCore
                     NetworkRecoveryInterval = TimeSpan.FromSeconds(_config.NetworkRecoveryIntervalInSeconds ?? DefaultNetworkRecoveryInterval),
                     TopologyRecoveryEnabled = _config.TopologyRecoveryEnabled ?? true,
                     RequestedHeartbeat = TimeSpan.FromSeconds(_config.RequestedHeartBeat ?? DefaultRequestedHeartBeat),
+                    DispatchConsumersAsync = _config.UseAsyncDispatch ?? false,
                 };
 
                 return _factory;
