@@ -31,7 +31,7 @@ namespace SimpleRabbit.NetCore
 
         private ConcurrentBag<ulong> _toBeNackedMessages = new ConcurrentBag<ulong>();
 
-        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(AdjustConfiguration(options))
+        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options)
         {
             _logger = logger;
 
@@ -45,12 +45,6 @@ namespace SimpleRabbit.NetCore
                 _timer.Stop();
                 TimerActivation();
             };
-        }
-
-        private static RabbitConfiguration AdjustConfiguration(RabbitConfiguration options)
-        {
-            options.UseAsyncDispatch = true;
-            return options;
         }
         
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)

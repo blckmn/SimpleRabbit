@@ -35,7 +35,7 @@ namespace SimpleRabbit.NetCore
         /// </summary>
         public bool? TopologyRecoveryEnabled { get; set; }
         /// <summary>
-        /// You should set this flag to true when you are using IAsyncBasicConsumer, default: false
+        /// You should set this flag to false when you are using non-async message handler, default: true
         /// </summary>
         public bool? UseAsyncDispatch { get; set; }
     }
