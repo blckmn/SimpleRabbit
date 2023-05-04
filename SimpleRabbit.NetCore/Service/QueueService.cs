@@ -45,8 +45,6 @@ namespace SimpleRabbit.NetCore
                 _timer.Stop();
                 TimerActivation();
             };
-
-            Factory.DispatchConsumersAsync = true;
         }
 
         private static RabbitConfiguration AdjustConfiguration(RabbitConfiguration options)
