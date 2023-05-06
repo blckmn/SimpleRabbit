@@ -45,8 +45,6 @@ namespace SimpleRabbit.NetCore
                 _timer.Stop();
                 TimerActivation();
             };
-            
-            Factory.DispatchConsumersAsync = true;
         }
 
         public void Start(string queue, string tag, IMessageHandler handler, ushort prefetch = 1)
@@ -95,7 +93,7 @@ namespace SimpleRabbit.NetCore
 
         private async Task ReceiveEventAsync(object sender, BasicDeliverEventArgs args)
         {
-            var channel = (sender as EventingBasicConsumer)?.Model;
+            var channel = (sender as AsyncEventingBasicConsumer)?.Model;
             if (channel == null) throw new ArgumentNullException(nameof(sender), "Model null in received consumer event.");
             var message = new BasicMessage(args, channel, _queueServiceParams.QueueName, () => OnError(sender, args));
             try
