@@ -15,6 +15,7 @@ namespace SimpleRabbit.NetCore
 
     public abstract class BasicRabbitService : IBasicRabbitService
     {
+        private readonly object _lock = new object();
         private const ushort DefaultRequestedHeartBeat = 5;
         private const int DefaultNetworkRecoveryInterval = 10;
 
@@ -79,7 +80,7 @@ namespace SimpleRabbit.NetCore
 
         public IBasicProperties GetBasicProperties()
         {
-            lock(this)
+            lock (_lock)
             {
                 return Channel.CreateBasicProperties();
             }
@@ -87,7 +88,7 @@ namespace SimpleRabbit.NetCore
 
         public void ClearConnection()
         {
-            lock (this)
+            lock (_lock)
             {
                 if (_disposed)
                 {
@@ -95,11 +96,13 @@ namespace SimpleRabbit.NetCore
                 }
                 try
                 {
+                    _channel?.Close();
                     _channel?.Dispose();
                     _channel = null;
                 }
                 finally
                 {
+                    _connection?.Close();
                     _connection?.Dispose();
                     _connection = null;
                 }
@@ -109,7 +112,7 @@ namespace SimpleRabbit.NetCore
 
         public void Close()
         {
-            lock (this)
+            lock (_lock)
             {
                 if (_disposed)
                 {
