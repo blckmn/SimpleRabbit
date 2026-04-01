@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace SimpleRabbit.NetCore
 {
@@ -58,25 +60,86 @@ namespace SimpleRabbit.NetCore
             }
         }
         private string ClientName =>
-            _config?.Name ?? 
+            _config?.Name ??
             Environment.GetEnvironmentVariable("COMPUTERNAME") ??
             Environment.GetEnvironmentVariable("HOSTNAME");
 
         private readonly RabbitConfiguration _config;
+        private readonly ILogger _baseLogger;
 
         protected BasicRabbitService(RabbitConfiguration config)
         {
             _config = config;
         }
 
+        protected BasicRabbitService(RabbitConfiguration config, ILogger logger) : this(config)
+        {
+            _baseLogger = logger;
+        }
+
         private IConnection _connection;
         /// <summary>
         /// ClientName is used only for human reference from RabbitMQ UI.
         /// </summary>
-        protected IConnection Connection => _connection ?? (_connection = Factory.CreateConnection(_hostnames, ClientName));
+        protected IConnection Connection
+        {
+            get
+            {
+                if (_connection == null)
+                {
+                    _connection = Factory.CreateConnection(_hostnames, ClientName);
+
+                    if (_connection is IAutorecoveringConnection autorecovering)
+                    {
+                        autorecovering.RecoverySucceeded += OnConnectionRecoverySucceeded;
+                        autorecovering.ConnectionRecoveryError += OnConnectionRecoveryError;
+                    }
+
+                    _connection.ConnectionShutdown += OnConnectionShutdown;
+                }
+
+                return _connection;
+            }
+        }
 
         private IModel _channel;
         protected IModel Channel => _channel ?? (_channel = Connection.CreateModel());
+
+        private void OnConnectionRecoverySucceeded(object sender, EventArgs e)
+        {
+            _baseLogger?.LogInformation("RabbitMQ connection recovered successfully, invalidating channel");
+            lock (_lock)
+            {
+                // Invalidate the stale channel so it gets recreated on next access.
+                // The connection itself is still valid (it just recovered).
+                try
+                {
+                    _channel?.Dispose();
+                }
+                catch
+                {
+                    // Channel may already be disposed after recovery
+                }
+                _channel = null;
+            }
+            OnRecovered();
+        }
+
+        private void OnConnectionRecoveryError(object sender, ConnectionRecoveryErrorEventArgs e)
+        {
+            _baseLogger?.LogError(e.Exception, "RabbitMQ connection recovery failed");
+        }
+
+        private void OnConnectionShutdown(object sender, ShutdownEventArgs e)
+        {
+            _baseLogger?.LogWarning("RabbitMQ connection shutdown: {Reason}", e.ReplyText);
+        }
+
+        /// <summary>
+        /// Called when the connection has been automatically recovered.
+        /// Override to re-register consumers or perform other post-recovery actions.
+        /// </summary>
+        protected virtual void OnRecovered() { }
 
         public IBasicProperties GetBasicProperties()
         {
@@ -102,9 +165,24 @@ namespace SimpleRabbit.NetCore
                 }
                 finally
                 {
-                    _connection?.Close();
-                    _connection?.Dispose();
-                    _connection = null;
+                    try
+                    {
+                        if (_connection != null)
+                        {
+                            if (_connection is IAutorecoveringConnection autorecovering)
+                            {
+                                autorecovering.RecoverySucceeded -= OnConnectionRecoverySucceeded;
+                                autorecovering.ConnectionRecoveryError -= OnConnectionRecoveryError;
+                            }
+                            _connection.ConnectionShutdown -= OnConnectionShutdown;
+                        }
+                    }
+                    finally
+                    {
+                        _connection?.Close();
+                        _connection?.Dispose();
+                        _connection = null;
+                    }
                 }
 
             }
