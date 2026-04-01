@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SimpleRabbit.NetCore
@@ -21,17 +22,20 @@ namespace SimpleRabbit.NetCore
         private const int DefaultRetryInterval = 15;
 
         private readonly ILogger<QueueService> _logger;
+        private readonly object _restartLock = new object();
 
         private readonly Timer _timer;
         private QueueConfiguration _queueServiceParams;
         private IMessageHandler _handler;
         private TimeSpan RetryInterval => TimeSpan.FromSeconds(_queueServiceParams?.RetryIntervalInSeconds ?? DefaultRetryInterval);
-        
+
         private int _retryCount;
+        private int _restarting;
+        private volatile bool _stopping;
 
         private ConcurrentBag<ulong> _toBeNackedMessages = new ConcurrentBag<ulong>();
 
-        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options)
+        public QueueService(RabbitConfiguration options, ILogger<QueueService> logger) : base(options, logger)
         {
             _logger = logger;
 
@@ -71,6 +75,7 @@ namespace SimpleRabbit.NetCore
         private void Start()
         {
             Stop();
+            _stopping = false;
             if (_handler == null)
             {
                 throw new ArgumentNullException(nameof(_handler), $"No handler provided for {_queueServiceParams.ConsumerTag} => {_queueServiceParams.QueueName}");
@@ -80,14 +85,48 @@ namespace SimpleRabbit.NetCore
             {
                 var consumer = new AsyncEventingBasicConsumer(Channel);
                 consumer.Received += ReceiveEventAsync;
+                consumer.ConsumerCancelled += OnConsumerCancelled;
+                consumer.Shutdown += OnConsumerShutdown;
 
                 Channel.BasicQos(0, _queueServiceParams.PrefetchCount ?? 1, false);
                 Channel.BasicConsume(_queueServiceParams.QueueName, false, _queueServiceParams.DisplayName ?? _queueServiceParams.ConsumerTag, consumer);
+
+                _logger.LogInformation($"Consumer started on queue {_queueServiceParams.QueueName}");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, $"{_queueServiceParams.QueueName} -> {e.Message}");
                 RestartIn(RetryInterval);
+            }
+        }
+
+        private Task OnConsumerCancelled(object sender, ConsumerEventArgs e)
+        {
+            if (_stopping) return Task.CompletedTask;
+            _logger.LogWarning($"Consumer cancelled by broker on queue {_queueServiceParams.QueueName}, tags: {string.Join(", ", e.ConsumerTags)}. Scheduling restart.");
+            RestartIn(RetryInterval);
+            return Task.CompletedTask;
+        }
+
+        private Task OnConsumerShutdown(object sender, ShutdownEventArgs e)
+        {
+            if (_stopping) return Task.CompletedTask;
+            _logger.LogWarning($"Consumer shutdown on queue {_queueServiceParams.QueueName}: {e.ReplyText}. Scheduling restart.");
+            RestartIn(RetryInterval);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called by BasicRabbitService when the connection has been automatically recovered.
+        /// Re-registers the consumer since the old channel/consumer is stale after recovery.
+        /// </summary>
+        protected override void OnRecovered()
+        {
+            if (_stopping) return;
+            _logger.LogInformation($"Connection recovered, restarting consumer on queue {_queueServiceParams?.QueueName}");
+            if (_queueServiceParams != null && _handler != null)
+            {
+                RestartIn(TimeSpan.FromSeconds(1));
             }
         }
 
@@ -158,7 +197,17 @@ namespace SimpleRabbit.NetCore
                     default:
                     {
                         RestartIn(RetryInterval);
-                        channel.BasicNack(message.DeliveryTag, false, true);
+                        try
+                        {
+                            if (!channel.IsClosed)
+                            {
+                                channel.BasicNack(message.DeliveryTag, false, true);
+                            }
+                        }
+                        catch (Exception nackEx)
+                        {
+                            _logger.LogWarning(nackEx, $"Failed to nack message {message.DeliveryTag} on queue {_queueServiceParams.QueueName} (channel may be closed)");
+                        }
                         return;
                     }
                 }
@@ -172,50 +221,71 @@ namespace SimpleRabbit.NetCore
 
         private void RestartIn(TimeSpan waitInterval)
         {
-            if (_timer.Enabled)
+            // Use atomic compare-exchange to ensure only one thread enters the restart path.
+            if (Interlocked.CompareExchange(ref _restarting, 1, 0) != 0)
             {
-                // another message has already triggered an error.
+                // Another thread is already handling the restart.
                 return;
-                
             }
 
-            if (_queueServiceParams.OnErrorAction == QueueConfiguration.ErrorAction.RestartConnection)
+            try
             {
-                try
+                if (_queueServiceParams.OnErrorAction == QueueConfiguration.ErrorAction.RestartConnection)
                 {
-                    //take note of blocking if clearing connection here
-                    //https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
-                    // attempt to stop the event consumption.
-                    if (Channel != null && !Channel.IsClosed)
-                        Channel?.BasicCancel(_queueServiceParams.ConsumerTag);
+                    try
+                    {
+                        //take note of blocking if clearing connection here
+                        //https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/341
+                        // attempt to stop the event consumption.
+                        if (Channel != null && !Channel.IsClosed)
+                            Channel?.BasicCancel(_queueServiceParams.DisplayName ?? _queueServiceParams.ConsumerTag);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
-                catch
-                {
-                    // ignored
-                }
+
+                _retryCount++;
+                var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
+
+                _timer.Interval = interval * 1000; // seconds
+                _logger.LogInformation($" -> restarting in {interval} seconds ({_retryCount}).");
+                _timer.Start();
             }
-
-            _retryCount++;
-            var interval = waitInterval.TotalSeconds * (_queueServiceParams.AutoBackOff ? _retryCount : 1) % MaxRetryInterval;
-
-            _timer.Interval = interval * 1000; // seconds
-            _logger.LogInformation($" -> restarting in {interval} seconds ({_retryCount}).");
-            _timer.Start();
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Error scheduling restart for queue {_queueServiceParams.QueueName}");
+                // Reset the flag so a future attempt can try again
+                Interlocked.Exchange(ref _restarting, 0);
+            }
         }
 
         private void TimerActivation()
         {
+            // Reset the restart flag so future errors can schedule a new restart.
+            Interlocked.Exchange(ref _restarting, 0);
+
             switch (_queueServiceParams.OnErrorAction)
             {
                 case QueueConfiguration.ErrorAction.NackOnException:
                 {
-                    foreach (var message in _toBeNackedMessages)
+                    try
                     {
-                        if (Channel != null && !Channel.IsClosed)
+                        foreach (var message in _toBeNackedMessages)
                         {
-                            Channel.BasicNack(message, false, true);
+                            if (Channel != null && !Channel.IsClosed)
+                            {
+                                Channel.BasicNack(message, false, true);
+                            }
                         }
-                        
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogWarning(e, $"Failed to nack queued messages on {_queueServiceParams.QueueName}, scheduling restart");
+                        _toBeNackedMessages.Clear();
+                        RestartIn(RetryInterval);
+                        return;
                     }
                     _toBeNackedMessages.Clear();
                     return;
@@ -231,7 +301,16 @@ namespace SimpleRabbit.NetCore
 
         public void Stop()
         {
+            _stopping = true;
+            Interlocked.Exchange(ref _restarting, 0);
+            _timer.Stop();
             Close();
+        }
+
+        protected override void Cleanup()
+        {
+            _timer?.Stop();
+            _timer?.Dispose();
         }
     }
 }
